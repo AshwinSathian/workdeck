@@ -362,21 +362,35 @@ test_changelog_says_what_0_1_3_renames() {
 # the planner's entry has no version and no date, and the manifest stays as it is.
 test_changelog_has_an_unreleased_entry_for_the_planner() {
   local e
-  [ "$(grep -m1 '^## \[' "$ROOT/CHANGELOG.md")" = '## [Unreleased]' ] || fail 'the first entry of CHANGELOG is not headed [Unreleased]'
+  [ "$(awk '/^## \[/ { print; exit }' "$ROOT/CHANGELOG.md")" = '## [Unreleased]' ] || fail 'the first entry of CHANGELOG is not headed [Unreleased]'
   e=$(awk '/^## \[/ { on = index($0, "[Unreleased]") > 0 } on' "$ROOT/CHANGELOG.md")
   assert_contains "$e" '### Added'
   assert_contains "$e" '### Changed'
   assert_contains "$e" '`/workdeck:plan'
   assert_contains "$e" '`workdeck:plan-reviewer`'
   assert_contains "$e" '`card plan`'
+  assert_contains "$e" '`card plan new <spec path> <PREFIX> [--level N]`'
+  assert_contains "$e" '`card plan accept <PREFIX>`'
   assert_contains "$e" '`card plan start <id>`'
-  assert_contains "$e" '`version = 1`'
-  assert_contains "$e" 'run `/workdeck:init` again'
+  assert_contains "$e" '`card plan check <id>`'
+  # One phrase for each item under Changed.
+  assert_contains "$e" '`card show` include rows'
+  assert_contains "$e" '`/workdeck:next-card` writes the card when it starts a row'
+  assert_contains "$e" '`/workdeck:handoff` adds to the pull request body'
+  assert_contains "$e" '`/workdeck:init` no longer stops'
+  assert_contains "$e" 'The reviewer agent lists the requirements'
+  assert_contains "$e" 'The end-of-turn hook does not count commits'
+  assert_contains "$e" 'allows the push of a `plan/*` branch'
+  assert_contains "$e" '`/workdeck:init` writes a cards or log directory that has another name'
+  assert_contains "$e" '`card new` refuses a card path that is a symbolic link'
+  assert_contains "$e" '`workdeck.conf` stays at `version = 1`'
+  assert_contains "$e" 'To plan in a repository set up with 0.1, run `/workdeck:init` again'
+  assert_contains "$e" 'It receives them when the version changes'
   assert_contains "$e" '### Upgrading from 0.1'
   assert_contains "$e" 'card and session log formats do not change'
   if printf '%s\n' "$e" | grep -q '0\.2\.[0-9]'; then fail 'the unreleased entry names a release of 0.2'; fi
   if printf '%s\n' "$e" | grep -q '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'; then fail 'the unreleased entry has a date'; fi
-  if grep -q '^## \[0\.2\|^\[0\.2\|^\[Unreleased\]:' "$ROOT/CHANGELOG.md"; then fail 'CHANGELOG names a release of 0.2'; fi
+  if grep -qi '^## \[0\.2\|^\[0\.2\|^\[Unreleased\]:' "$ROOT/CHANGELOG.md"; then fail 'CHANGELOG names a release of 0.2'; fi
   assert_eq 'card 0.1.3' "$("$BASH" "$CARD" version)"
   grep -q '"version": "0.1.3"' "$ROOT/.claude-plugin/plugin.json" || fail 'plugin.json is not at 0.1.3'
 }
