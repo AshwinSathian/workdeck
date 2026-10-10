@@ -623,3 +623,22 @@ test_evidence_names_the_first_pull_request() {
   done
   ! grep -q -i 'no pull requests\|none did' "$ROOT/README.md" || fail 'README still says no card went through the loop'
 }
+
+# Design 0.2, section 17, last item: the three hand runs are on the evidence page.
+test_evidence_records_the_hand_runs_of_plan_next_card_and_init() {
+  local s w n
+  s=$(doc_section docs/evidence.md 'Hand runs of the planner in a scratch repository')
+  [ -n "$s" ] || fail 'evidence has no section for the hand runs'
+  for w in '--plugin-dir' '--setting-sources project' '/workdeck:plan' '/workdeck:next-card' '/workdeck:init' 'Changes to the card since it was approved' 'stop hook' 'no prompt is recorded as such' '### Faults found' 'None is fixed here' '### Not run'; do
+    assert_contains "$s" "$w"
+  done
+  # One growth figure per run: init, plan twice, the dependency's card and the row that had it.
+  n=$(printf '%s\n' "$s" | grep -c '^| Growth | [0-9][0-9,]* |$')
+  [ "$n" -ge 5 ] || fail "the hand runs give $n growth figures, not one per run"
+  # Each fault names the file it is in.
+  n=$(printf '%s\n' "$s" | awk '/^### Faults found/ { on = 1; next } /^### / { on = 0 } on && /^- /' | grep -vc '^- `[a-z]*/[^`]*`')
+  [ "$n" -eq 0 ] || fail "$n faults do not start with the file they are in"
+  s=$(doc_section docs/evidence.md 'Not yet shown')
+  [ -n "$s" ] || fail 'evidence has no section Not yet shown'
+  ! printf '%s\n' "$s" | grep -q 'The DOC-02 session ran under' || fail 'Not yet shown still has the 0.1 text on init'"'"'s permission entries'
+}

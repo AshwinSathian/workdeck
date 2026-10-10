@@ -20,6 +20,7 @@ done: false
 - docs/evidence.md
 - docs/development/README.md
 - test/cases/02-plugin.sh
+- README.md (only the Known limits bullet on commands that are not pre-approved, and only if the prompts written down differ from it)
 
 ## Tests
 - test_evidence_records_the_trial_of_the_planner
@@ -36,6 +37,8 @@ done: false
 - The page states no threshold and no verdict. The maintainer reads the record and decides whether to tag.
 - Every figure on the page can be traced to a pull request, a session log or a command, and the page says which.
 - Every fault that P-21 listed is closed by a merged card, or is listed on the page as open.
+- For one plan session and one card session of the trial, the page lists each permission prompt as the maintainer wrote it down when it appeared, under the conditions the last note gives. If the list differs from the README's Known limits bullet on commands that are not pre-approved, the bullet is corrected.
+- The page says which of these the trial met, and what happened: a card changed after its approval, so that the part "Changes to the card since it was approved" holds a difference; a no in step 8 of plan; a plan pull request resumed in step 2; a revision that adds a row for new code; a refusal by `card plan new`. One that was not met is said to be not met.
 
 ## Out of scope
 - The version, the tag, and the decision to release. P-24 carries it.
@@ -48,3 +51,4 @@ done: false
 - The measure "files added to `Touch` after approval" is read from the part of each pull request body that handoff writes (P-15). If a body lacks it, `git diff <approval commit> HEAD -- <card file>` on the merged branch gives the same.
 - With ten cards no count carries a threshold: a planner that misses a file on half its cards passes a "more than half" test 62 times in 100. Do not write one into the page.
 - From the second review of P-15 (`docs/development/review-0.2.md`, eighteenth pass): a card that had a review-fixes session has the part as its first handoff wrote it. Handoff does not write the body again, so a `Touch` line added while fixing review comments is missing from it. For such a card read `git diff <approval commit> HEAD -- <card file>` on the merged branch, not the body.
+- From the reviews of P-21 (`docs/development/review-0.2.md`, twenty-fourth pass): the last two `Acceptance` items and the README line under `Touch`. P-21 could only infer prompts from a pasted terminal and from waits in the transcripts, and two of its inferences were wrong. A session counts for the prompt record only if it was started with `--setting-sources project` and `--permission-mode default`, stayed in that mode, and every prompt was answered with a plain yes; without those the maintainer's own allow rules apply, which is how the quick-card run of 0.1 failed to show it.
