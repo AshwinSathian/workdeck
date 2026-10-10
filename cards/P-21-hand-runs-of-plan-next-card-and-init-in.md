@@ -3,7 +3,7 @@ id: P-21
 title: Hand runs of plan, next-card and init in a scratch repository
 size: S
 depends: P-13, P-14, P-15, P-17
-done: false
+done: true
 ---
 
 ## Read
