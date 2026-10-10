@@ -4,6 +4,36 @@ Notable changes to WorkDeck. The format follows [Keep a Changelog](https://keepa
 
 Claude Code keeps an installed plugin at the version in `plugin.json`, so every fix that users should receive comes with a version bump and a tag.
 
+## [Unreleased]
+
+The planner, which the README calls 0.2. It is on the main branch and has no version yet: `card version` and `plugin.json` still say 0.1.3. A new install takes the main branch and receives it. A plugin that is already installed keeps what it had when it was installed, until the version changes.
+
+### Added
+
+- The skill `/workdeck:plan <spec path> [what to change]`. It cuts a specification, one markdown file committed in the repository, into an outline with one row per card. A script checks the outline, an agent that did not write it reviews it, you approve it, and it lands through a pull request from a `plan/*` branch that changes nothing else.
+- The agent `workdeck:plan-reviewer`, which reviews an outline against its specification.
+- `card plan` in five forms: `card plan` checks every outline, `card plan new <spec path> <PREFIX> [--level N]` creates one, `card plan accept <PREFIX>` records in the outline which content of the specification it was written from, `card plan start <id>` creates the card file for a row, and `card plan check <id>` checks one card against the working tree.
+- Outlines, in `<cards_dir>/plan/`. A row is a card without a body.
+
+### Changed
+
+- `card list`, `card next`, `card status` and `card show` include rows. In a repository with no outline they print what they printed before.
+- `/workdeck:next-card` writes the card when it starts a row. It fills the body in against the code as it is, checks it, asks for a yes before any code, and commits the approved card alone.
+- `/workdeck:handoff` adds to the pull request body what changed in a planned card since it was approved.
+- `/workdeck:init` no longer stops in a repository that has `workdeck.conf`. It offers the permission entries the settings file lacks, lockfiles and generated files for `touch_ignore`, review rules taken from the repository, and the current protocol section. It asks before each. A first run in a new repository also offers the `touch_ignore` entries and the review rules.
+- The reviewer agent lists the requirements under a planned card's specification headings that the card neither covers nor excludes.
+- The end-of-turn hook does not count commits that change nothing outside the cards directory, so the commit of an approved card does not ask for a session log. It finds the session log when it runs in a subdirectory, where it asked for one that was there.
+- The permission template allows the push of a `plan/*` branch, and denies that push with a further argument. It also denies a push whose last argument is `--delete` or `-d`; a push with either flag elsewhere in the command was denied before. The protocol section for `CLAUDE.md` has two new lines.
+- `/workdeck:init` writes a cards or log directory that has another name into the protocol section, on a first run and on a later one. Where a settings file or the permission template does not parse as JSON, init names the file and writes nothing to a settings file.
+- `card new` refuses a card path that is a symbolic link, with exit 1. Before, it wrote through a link whose target did not exist.
+
+### Upgrading from 0.1
+
+- The configuration, card and session log formats do not change, and `workdeck.conf` stays at `version = 1`. A repository that does not use the planner works as before, with the exceptions listed under Changed, which need no outline: those to init, to the end-of-turn hook, to the permission template and to `card new`.
+- To plan in a repository set up with 0.1, run `/workdeck:init` again and commit what it wrote before you type `/workdeck:plan`. A plugin installed before the planner was complete on the main branch lacks the skill, the changed init, or both. It receives them when the version changes, and you update the plugin then.
+- From 0.1.2 or earlier, do the steps of 0.1.3 first.
+- A CI workflow that names the tag `v0.1.3` keeps passing on a planned deck, because that `card` does not read outlines. One thing fails it, at that tag and on the main branch: a card that depends on a row with no card file, whether the card was written by hand or by `card plan start`. The `card` at that tag has no `plan` command.
+
 ## [0.1.3] - 2026-10-09
 
 The code of 0.1.2 under the name WorkDeck. The project was renamed after `v0.1.2` was tagged and the version was not changed, so that tag holds the former name, Mergehand.

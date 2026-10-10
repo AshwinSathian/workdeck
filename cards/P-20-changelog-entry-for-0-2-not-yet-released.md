@@ -3,7 +3,7 @@ id: P-20
 title: Changelog entry for 0.2, not yet released
 size: XS
 depends: P-18, P-19
-done: false
+done: true
 ---
 
 ## Read
@@ -14,6 +14,7 @@ done: false
 ## Touch
 - CHANGELOG.md
 - test/cases/02-plugin.sh
+- docs/development/review-0.2.md (the record of the second review, as P-18 and P-19 have)
 
 ## Tests
 - test_changelog_has_an_unreleased_entry_for_the_planner
@@ -32,4 +33,5 @@ done: false
 
 ## Notes
 - The version is not changed here on purpose. Claude Code delivers the plugin to everyone who installed it when `version` in `plugin.json` changes on the main branch (design section 19, row 18), and that must wait for the trial.
-- If the trial changes the plan skill or the outline format, the card that makes the change adds a line to this entry.
+- "No version number" in the third `Acceptance` item means the heading, a link line and a release such as `0.2.1`. The entry's first line says "which the README calls 0.2", so that a reader who comes from the README can match the two (the second review, `docs/development/review-0.2.md`, twenty-third pass).
+- If the trial changes the plan skill or the outline format, the card that makes the change adds a line to this entry. Where it rewords a line of the entry, it has `test/cases/02-plugin.sh` in its `Touch`: the test holds a phrase of each item under Changed.
