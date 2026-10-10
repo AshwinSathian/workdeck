@@ -3,7 +3,7 @@ id: F-01
 title: The push is its own command, and the refspec deny rule
 size: S
 depends:
-done: false
+done: true
 ---
 
 ## Read

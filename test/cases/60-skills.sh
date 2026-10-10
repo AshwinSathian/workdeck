@@ -186,9 +186,19 @@ SENTENCES
   commit=$(grep -n 'git commit' "$f" | head -1 | cut -d: -f1)
   part=$(grep -n 'card as approved' "$f" | head -1 | cut -d: -f1)
   assert_eq "$((commit + 1))" "$part" 'line of the addition'
-  # One addition: without that line the skill is what it was in 0.1, split mode included.
+  # One addition: without that line the skill is what it was in 0.1, split mode
+  # included, but for the sentence of F-01 that the push is its own command.
   assert_eq 1 "$(grep -c 'card as approved' "$f")" 'lines that name the approval commit'
-  assert_eq '2145693172 4250' "$(grep -v 'card as approved' "$f" | cksum)" 'handoff without the addition'
+  assert_eq '2103718737 4358' "$(grep -v 'card as approved' "$f" | cksum)" 'handoff without the addition'
+}
+
+# Hand runs of 2026-10-11 (docs/evidence.md): a push that led a longer command
+# was denied with no prompt, and the same push written alone ran.
+test_handoff_runs_the_push_as_its_own_command() {
+  local s
+  s=$(awk '/^[0-9]+\. / { on = $1 == "7." } on' "$ROOT/skills/handoff/SKILL.md" | grep -F -- '- `git push -u origin <branch>`.')
+  assert_eq 1 "$(printf '%s\n' "$s" | grep -c .)" 'lines of step 7 that push'
+  assert_contains "$s" 'Run the push as its own command, with nothing chained before or after it and nothing after the branch name.'
 }
 
 # next_step <n>: the text of one numbered step of next-card, with its
@@ -474,6 +484,10 @@ test_plan_skill_puts_every_finding_in_the_pull_request_body() {
   assert_contains "$s" 'gh pr edit <number> --title "plan: <PREFIX>, <n> rows" --body-file <file>'
   # A trailer is the user's setting: the skill says nothing for or against one.
   ! grep -n -i 'trailer\|co-authored' "$PLAN_SKILL" || fail 'the plan skill speaks of a commit trailer'
+}
+
+test_plan_skill_runs_the_push_as_its_own_command() {
+  assert_contains "$(plan_step 9)" 'Otherwise run `git push -u origin <branch>`. Run the push as its own command, with nothing chained before or after it and nothing after the branch name.'
 }
 
 test_plan_skill_never_reuses_the_id_of_a_removed_row() {

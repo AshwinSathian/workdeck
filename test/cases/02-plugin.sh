@@ -224,12 +224,44 @@ test_templates_are_complete() {
 
 # The allow rule for pushing card branches is a prefix match, so the deny
 # list must close the refspec forms that would land a card branch elsewhere.
+# A rule for "has a colon" would end in `:*`, which Claude Code reads as the
+# prefix form, so there is one rule for each character a destination starts with.
 test_permission_template_denies_refspec_pushes() {
-  local f="$ROOT/templates/settings-permissions.json" deny r
+  local f="$ROOT/templates/settings-permissions.json" deny r c
   deny=$(awk '/"deny"/ { on = 1 } on' "$f")
-  for r in 'Bash(git push *:*)' 'Bash(git push origin card/* *)' 'Bash(git push -u origin card/* *)'; do
+  for r in 'Bash(git push origin card/* *)' 'Bash(git push -u origin card/* *)'; do
     assert_contains "$deny" "\"$r\""
   done
+  for c in a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9 _; do
+    assert_contains "$deny" "\"Bash(git push *:$c*)\""
+  done
+}
+
+# The `:*` suffix is the prefix form only at the end of a rule that has no
+# other wildcard. Claude Code 2.1.296 says at every start that a rule with
+# both "is matched as a literal prefix", so it refuses nothing.
+test_permission_template_has_no_rule_that_mixes_a_wildcard_with_the_prefix_form() {
+  local r
+  for r in allow deny; do
+    rules "$r" | grep -n -E '\*.*:\*$' && fail "a rule of $r mixes * with a trailing :*"
+  done
+  return 0
+}
+
+test_permission_template_does_not_pre_approve_a_push_with_a_refspec() {
+  local c
+  while IFS= read -r c; do
+    matches deny "$c" || fail "not denied: $c"
+  done <<'COMMANDS'
+git push origin card/A-1-x:main
+git push -u origin card/A-1-x:main
+git push origin plan/2610091200:main
+git push -u origin plan/2610091200:main
+git push origin card/A-1-x:refs/heads/main
+git push origin card/A-1-x:Develop
+git push origin card/A-1-x:0.2
+git push origin card/A-1-x:_x
+COMMANDS
 }
 
 # rules <allow|deny>: the Bash(...) patterns of one list, one per line.
@@ -242,12 +274,20 @@ rules() {
 # command, with * standing for any text? (Claude Code also lets a trailing
 # " *" match the bare command, but only when it is the rule's only wildcard,
 # so the "card/* *" and "plan/* *" deny rules do not match the plain push;
-# none of these cases depends on it.)
+# none of these cases depends on it.) A rule that ends in `:*` is not a shell
+# pattern: alone it is the prefix form, and with another * the rest is a
+# literal prefix, asterisk included.
 matches() {
   local pat
   while IFS= read -r pat; do
-    # shellcheck disable=SC2254
-    case $2 in $pat) return 0 ;; esac
+    case $pat in
+      *'*'*':*') case $2 in "${pat%:\*}"*) return 0 ;; esac ;;
+      *':*') case $2 in "${pat%:\*}" | "${pat%:\*} "*) return 0 ;; esac ;;
+      *)
+        # shellcheck disable=SC2254
+        case $2 in $pat) return 0 ;; esac
+        ;;
+    esac
   done <<RULES
 $(rules "$1")
 RULES
