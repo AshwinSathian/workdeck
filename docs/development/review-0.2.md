@@ -831,3 +831,44 @@ The two runs on one outline. Neither had a `must-fix`. Both had one `should-fix`
 Held when run by the second reviewer: the whole suite on a copy, 544 passed; `make lint`; `card lint`, `card plan`, `card touched P-21` and `card tests P-21` each exit 0; `card next` prints F-01; `card tokens` on the five transcripts gives the page's figures; the fifth session has eight `permission-mode` entries, all `default`, one model, and three subagents on that model; pull request 4's body holds all thirteen findings; each of the eight faults lands in one card; the prefix `F` was free and none of the cards' test names exists.
 
 Not run: any Claude Code session, so the warning at start and what prompted are as the maintainer's terminal showed them; the `permissions` page itself, which F-01 reads; the pull requests 1 to 3 and the init transcript, which the handoff reviewer had read. Nobody reviewed the fixes of the second table.
+
+## Twenty-fifth pass, 2026-10-11: the reviews of F-01
+
+F-01 replaced the deny rule `Bash(git push *:*)` of the permission template and made the handoff and plan skills say that the push is its own command. The session read the `permissions` page and put three ways to the maintainer, who chose one deny rule for each first character of a destination. Two agents that did not write it reviewed it: the handoff reviewer before the pull request was opened, and a second, told to break it, after. Neither had a must-fix. The maintainer then told the session to take every decision the pull request left open. Both were general-purpose agents: the plugin was not loaded in the session, which followed the skill files by hand.
+
+The handoff review:
+
+| Found | Decided | Why |
+|---|---|---|
+| A destination whose first character is not an ASCII letter, a digit or `_` matches none of the 63 rules: `card/A-1-x:"main"`, `:'main'`, `:$BASE` and `:\main` are pre-approved | The README bullet, the changelog line and row 12 said so. Not fixed in the template then; see the second review | A rule for every character does not end. |
+| The session log did not exist at the review, so its two items could not be checked: the way chosen with the sentence of the page, and the start of Claude Code | The log has both sentences. For the start, see below | Handoff writes the log after the review. |
+| "Each letter, digit and `_` that a destination can start with" reads as every first character | Reworded in the changelog and in row 12 | |
+| The two branches of `matches` for a rule that ends in `:*` are run by no test | Left; the second review made them one | The template has no such rule, and a test forbids one. |
+
+The second review:
+
+| Found | Decided | Why |
+|---|---|---|
+| Six spellings of the same destination still landed a card branch on `main` of a scratch remote: `:"main"`, `:'main'`, `:$BASE`, `:\main`, `:{main,tmp}` and a backtick | Six deny rules, for `"`, `'`, `$`, a backslash, a backtick and `{`. 69 in all | Each is a way a shell writes `main`. The maintainer had chosen the rules by first character; these are six more of them. |
+| Its rule for a backslash, four backslashes in the file | Eight in the file. With four, Claude Code 2.1.296 ran `git push origin card/X-1-a:\bs`; with eight it denied that push and `:\\bs2`, and still ran `:+plus` and the plain push | The reviewer's copy of the matcher was wrong here. The run is the evidence. |
+| Every printable first character, in place of 69 rules? | No | `:` cannot be written: `git push *::*` ends in `:*`. `( ) ; & | < > #` end the word. The rest matter only for a base branch that starts with that character, and `?` and `[` would be wildcards to `matches`. |
+| "No one rule says has a colon" is false for 2.1.296: `Bash(git push *:**)` does not end in `:*` and is a wildcard rule, with a warning of its own at start | Row 12 says "without a warning at start" and names the rule as the way not taken | It trades one warning for another, and it was read out of the program, not run. |
+| "Starts with" misdescribes the rule: `card/x':'main` has the destination `main` and is pre-approved | The README and the changelog say "the character written straight after a colon" | |
+| The changelog did not say that every push with a colon is now denied with no prompt: a remote given as `git@host:owner/repo.git`, `HEAD:refs/for/main`, `:old` | A sentence in the changelog line | They were prompted before, the rule being dead. |
+| The comment above the test for a mixed rule was wrong, and the mixed branch of `matches` had no word boundary | The comment is corrected and the two branches are one | A rule that ends in `:*` is the prefix form whatever else it holds. |
+| `matches` reads a rule as the file has it, before JSON is decoded | The rule for a backslash is held by its text only | A comment says so. |
+| README, the next bullet, still says a push with a redirect after it was not run | Left | F-05 owns that bullet, and a test holds its text. |
+| `docs/development/findings.md` still names `Bash(git push *:*)` as denying a refspec push | Left | A record of its day, and not in `Touch`. |
+
+Decisions taken on what the pull request left open:
+
+1. The start of Claude Code with the new entries. Done in part, by the session: Claude Code 2.1.296, headless, in a scratch repository with a bare remote, the template's deny list in `.claude/settings.json` and the allow rule on the command line. A push of the card branch to `main`, `m`, `"quoted"`, `'single'`, `$DEST`, `\bs`, `` `echo bt` `` and `{b1,b2}` was denied, and the plain push ran. Under the list the main branch had the pushes to `main`, `m` and `"quoted"` ran, so the fault of the evidence page is now seen and not only read from a message. The warning at start was not seen for either list: a headless start in a workspace that is not trusted prints none, and `claude doctor` prints none for a rule. The second reviewer read the 2.1.296 validator: `Bash(git push *:a*)` draws no warning. One interactive start remains, and does not hold the merge.
+2. Whether `*:m*` matches a destination of one character. Closed: `card/X-1-a:m` was denied.
+3. Destinations written with a quote or `$`. Closed with the six rules. What is left, `+`, other punctuation and a letter outside ASCII, is in the README.
+4. One rule `git push *:**` for 69. Not taken.
+5. The measured fields, all `unknown`. Left: the skills were not installed, and the figures cannot be rebuilt.
+6. The review by a general-purpose agent, not `workdeck:reviewer`. Accepted, as said in the pull request.
+
+Held when run by the second reviewer: the two sentences of the page are word for word; the plain pushes match an allow rule and no deny rule; `gh pr create --title "F-01:x"` is not a `git push`; with `*:m*` removed four tests fail, and with `git push *:*` put back the test for a mixed rule fails; both skill tests fail when the sentence is shortened; no other skill, `reference/implement.md` or the README shows a chained push.
+
+Not run: an interactive start, so the warning at start is as the program reads; how Claude Code splits a compound command or drops a redirect before it matches. Nobody reviewed the fixes that followed the second review.

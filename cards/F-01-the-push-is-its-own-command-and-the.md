@@ -24,6 +24,7 @@ done: true
 - docs/design-0.2.md
 - CHANGELOG.md
 - README.md (only the Known limits bullet on the permission entries)
+- docs/development/review-0.2.md (the record of the two reviews of this card, as every card of 0.2 has one)
 
 ## Tests
 - test_permission_template_has_no_rule_that_mixes_a_wildcard_with_the_prefix_form

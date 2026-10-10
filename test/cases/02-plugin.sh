@@ -235,11 +235,28 @@ test_permission_template_denies_refspec_pushes() {
   for c in a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 0 1 2 3 4 5 6 7 8 9 _; do
     assert_contains "$deny" "\"Bash(git push *:$c*)\""
   done
+  # Six more, for the ways a shell spells the same destination: a quote of
+  # either kind, a variable, a backslash, a command substitution and a brace.
+  # They are read here as the file has them, before JSON is decoded. The rule
+  # for a backslash has eight in the file, four once decoded: with four in the
+  # file Claude Code 2.1.296 let `card/x:\main` through, and with eight it
+  # refused it.
+  while IFS= read -r c; do
+    grep -q -F -- "\"Bash(git push *:$c*)\"" "$f" || fail "no deny rule for a destination written with $c first"
+  done <<'CHARS'
+\"
+'
+$
+\\\\\\\\
+`
+{
+CHARS
+  assert_eq 69 "$(rules deny | grep -c '^git push \*:')" 'deny rules for a refspec'
 }
 
-# The `:*` suffix is the prefix form only at the end of a rule that has no
-# other wildcard. Claude Code 2.1.296 says at every start that a rule with
-# both "is matched as a literal prefix", so it refuses nothing.
+# A rule that ends in `:*` is the prefix form. With another * in it, Claude
+# Code 2.1.296 says at every start that it "is matched as a literal prefix",
+# asterisk included, so it refuses nothing.
 test_permission_template_has_no_rule_that_mixes_a_wildcard_with_the_prefix_form() {
   local r
   for r in allow deny; do
@@ -261,7 +278,17 @@ git push origin card/A-1-x:refs/heads/main
 git push origin card/A-1-x:Develop
 git push origin card/A-1-x:0.2
 git push origin card/A-1-x:_x
+git push origin card/A-1-x:"main"
+git push origin card/A-1-x:'main'
+git push origin card/A-1-x:$BASE
+git push origin card/A-1-x:${BASE}
+git push origin card/A-1-x:`echo main`
+git push origin card/A-1-x:{main,tmp}
+git push origin plan/2610091200:"main"
 COMMANDS
+  # A destination written with a backslash first has a rule too, held by text
+  # in test_permission_template_denies_refspec_pushes: matches reads the rule
+  # before JSON is decoded, and cannot say what Claude Code makes of it.
 }
 
 # rules <allow|deny>: the Bash(...) patterns of one list, one per line.
@@ -275,13 +302,12 @@ rules() {
 # " *" match the bare command, but only when it is the rule's only wildcard,
 # so the "card/* *" and "plan/* *" deny rules do not match the plain push;
 # none of these cases depends on it.) A rule that ends in `:*` is not a shell
-# pattern: alone it is the prefix form, and with another * the rest is a
-# literal prefix, asterisk included.
+# pattern: it is the prefix form, and what is before the suffix is literal, an
+# asterisk included. A rule is read as the file has it, before JSON is decoded.
 matches() {
   local pat
   while IFS= read -r pat; do
     case $pat in
-      *'*'*':*') case $2 in "${pat%:\*}"*) return 0 ;; esac ;;
       *':*') case $2 in "${pat%:\*}" | "${pat%:\*} "*) return 0 ;; esac ;;
       *)
         # shellcheck disable=SC2254
