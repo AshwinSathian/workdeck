@@ -1,6 +1,6 @@
 # Reviews of the 0.3 scope and design
 
-"The scope" is [`scope-0.3.md`](scope-0.3.md). The design is not written yet; card T-01b writes it and adds its reviews here.
+"The scope" is [`scope-0.3.md`](scope-0.3.md) and "the design" is [`../design-0.3.md`](../design-0.3.md). The first pass is on the scope note, before the design was written. The second and third are on the design, and on the scope where the design left it.
 
 ## First pass, 2026-10-11: the scope note and the split of T-01
 
@@ -98,3 +98,102 @@ Held when run or read by the second reviewer: the push races of risk 1; the git 
 Held by the third: `test/run.sh`, 560 passed; the gates and `shellcheck` again; the counts of findings in the two parts above against their rows; the citations; that the page says approvals and project plugins are shared with the main checkout, so the permission entries reach a worktree session; and that nothing 0.2 left to 0.3 is missing without a decision.
 
 Not run by anyone: mawk or gawk on the amended test before the push; anything on GitHub with a claim branch (a pull request from a branch that holds only an empty commit, a rebase merge of one, branch protection on `card/*`); a real `claude --worktree` session; overlap among cards that were ready at the same time, as opposed to all pairs.
+
+## Second pass, 2026-10-11: the design, as a draft
+
+Card T-01b wrote the design and was split at handoff after that first output, with the draft not approved and eight open points for the maintainer in its section 22. Pull request 41 was opened for the draft. The maintainer then told the session to have the pull request attacked by an agent that did not write it, to take the eight decisions and every other one, and to carry them out in the same pull request. So no decision below is the maintainer's, and merging the pull request is the approval of the design as decided. The split was undone: T-01b holds all three outputs again.
+
+Two agents read the draft. Both were general-purpose agents: the plugin was not loaded in the session. Runs were made with git 2.54.0 in scratch repositories with a bare remote. Claude Code pages were read through Context7.
+
+### The handoff review
+
+Before the pull request. Four must-fix findings, seven should-fix and five nits.
+
+| Found | Decided |
+|---|---|
+| The test's check of the section numbers never failed: awk's `exit` still runs `END`, so a design with a section renamed or removed passed | Rewritten, and six mutations of a copy of the design each fail it |
+| The design named the tool the pages were read through, which `cards/REVIEW.md` allows only in three other places | The design points here for it |
+| Quick went on with a new id after a refused claim, where the scope says a refused session stops, and section 22 did not list it | Quick stopped. The second review below overturned that with a reason, and the scope is amended |
+| "A hook that asks git for the top level gets the worktree" was stated for `claude --worktree`, which nobody ran | Said for a worktree made with git only; the other is row 6, unverified |
+| Two claims about Claude Code had no row: that a rule for `card` covers the push inside it, and that `git checkout -b` raised a prompt | Row 21, unverified. The second is now "is not among the permission entries" |
+| `git merge-tree` with no shared history exits 128, which row 13 did not have | In row 13: any exit but 0 and 1 is "cannot tell" |
+| A `held` line printed a branch name other than the current one, against a rule the design said it kept | An eighth open point; decided below |
+| The build order put commands and a changed handoff on the main branch before 0.2.0 on the writer's reading of "complete" | In the fifth open point; decided below |
+| Section 20 left out seven sentences of the skills | Added |
+| The table check passed a row with no page marked read, and a status that only began with a right word | Tightened: a numbered row in order, a page, one of three words, and no page means unverified |
+| The test did not hold the status line or that section 22 exists | It holds the status line |
+| Five nits: row 20 cited another design as its page; "until the last of them" read as the wrong card; a figure cited to the scope that is in this file; two sentences elsewhere that say the design is not written; `git grep` does not see an untracked file | The first three corrected. The two sentences are corrected in this pass. The last stands |
+
+### The second review
+
+Told to assume the scope and the design are both wrong, to read the design against `bin/card`, the hooks, the skills, the permission template and the two earlier designs, to give a verdict on each open point, and to run what a run can decide. Four must-fix findings, twelve should-fix and eight nits, and eight verdicts.
+
+| Open point | Verdict and evidence | Decided |
+|---|---|---|
+| 1. `card claim` pushes | Keep. Only a script can be raced in a test. But the skills' own `allowed-tools` allow `card`, so a user who declined the permission entries gets a push with no prompt | Kept, and said in sections 8, 16 and 18 |
+| 2. A quick card is claimed after the yes | Keep the timing; change the loss. Stopping throws away a card the user approved, over an id that means nothing | A new id, and claim again |
+| 3. Every start detaches at `origin/<base>` | Change. The draft detached only for a row or a quick card, so the pick read another branch's tree: on a branch holding a new card X-9, `card next` offered X-9, and the branch cut for it had no file | The third review settled it: next-card and quick detach before the pick |
+| 4. The mark only for a claimed branch | Keep. A place printed for any active card would differ from 0.1.3 in every case `test/cases/70-compat.sh` compares | Kept |
+| 5. What merges before 0.2.0 | Change. The handoff item is not complete alone: "do not pull" is wrong advice in 0.2.0 | Handoff waits with the other skills. The third review hid all four commands |
+| 6. The line as a hash of seven values | Keep the hash, but its reason is wrong: `date +%s` and `hostname` are no more portable than `/dev/urandom` | 40 digits from `/dev/urandom` |
+| 7. No minimum git version | Change. `%cs` is a second floor nobody listed | `--date=short`. 2.38 for the conflict report only, in the README |
+| 8. A branch name in a `held` line | Change. The form has no length limit, hyphenated words read as instructions, and for `held mine` the name comes from the remote under an email anyone can write | No name is printed. `card claim --resume <id>` does the checkout |
+
+| Found | Decided | Why |
+|---|---|---|
+| A project's commit-msg hook refused `<id>: started`: exit 1, and the branch left behind held the card `active` | The commit is made with `git commit-tree` | Ran under the same hook, and with `commit.gpgsign` set and no signing program: exit 0. The commit is unsigned, which the README says. |
+| A row that was claimed and never approved, when resumed, had no card file: `card plan start` wrote one on the base and the checkout of the branch refused to overwrite it | After a resume, a card whose `card show` starts with `row:` gets `card plan start` on its branch | With the claim before `card plan start` there is one path for both. |
+| Quick detached at a ref nobody had fetched: its state is read without `--fetch`, and the pull it lost was its fetch | `card base-ref --fetch` | |
+| A card file tracked on the current branch and on no base ref passed, and the checkout dropped it | Refused | The remainder of a split, before it merges. |
+| A slug kept three problems alive: two names for one id were both pushed, a row's name waited for its file, and nothing said how `card` knows a quick card | Every claim is `card/<id>` | `card_branches` and the stop hook already accept the bare name. This amends decision 2 in the order for a row. |
+| The loser between clones kept a local branch that a session may not delete | The commit is pushed first, and the branch is made after | From two clones: exit 0 and exit 1 "(fetch first)", with no card branch in the second. |
+| "As next-card's pull refuses today" was false: a local base branch that is only ahead starts a card in 0.2 | The start is the later of the two refs. Only two that have diverged are refused | `git pull --ff-only` printed "Already up to date" there. |
+| "Do not pull" is wrong when the remote branch has a commit added to the user's own branch | Handoff says both cases and does not pull | Telling them apart by the claim commit was left out: a branch of 0.2 has none. |
+| Since when moved with a rebase: the committer date | The author date | |
+| Two commands in `card help` fail a test until `docs/reference.md` has them, and the reference was last in the order | The card that makes a command known adds its row | |
+| No row for a team with both versions | A row in section 8 | |
+| The `git branch -D` printed after a no fails: the tree is on that branch | A detach is printed first | |
+| "After the title" does not fit `card next`, whose list has no title, and its two lines on releasing a card become incomplete | The exact line is given, and the two lines stay byte for byte, with a row in section 20 | |
+| A race lost at the checkout has two messages, and one exits 128 | After a failed checkout the branches are looked up again | |
+| A branch of 0.2 cut from a local base that was ahead got `origin/<base>` in the reviewer's prompt, so that base's commits read as the card's | `card fork-point`, the commit `card touched` measures from | |
+| Eight nits: an email set in the environment never matched `user.email`; `review` cannot be computed without `gh`; the first command a 0.2 `card` rejects is not `claim`; "writes nothing to a ref" while it fetches, and a detached HEAD is no obstacle to `merge-tree`; the plan skill still pulls; "one line" against three; exit 2 for "cannot tell" against the rule of `cards/REVIEW.md`; the budget warning can now come while a card is written; section 20 lacked the reviewer's line | All corrected: `git var GIT_AUTHOR_IDENT`; `review` is left to the lookup; exit 1 with a `card:` line; an unknown command, not a new exit; the warning is in section 10.1 | |
+
+## Third pass, 2026-10-11: the decisions
+
+A third agent, told to assume each decision and each fix of the second pass is wrong. One must-fix finding, eight should-fix and seven nits, and a list of the sentences of the scope that the design as decided had made false. All were taken.
+
+| Found | Decided | Why |
+|---|---|---|
+| "next-card needs no fresh tree: `card` reads the deck from the base refs" is false. An outline is read from the working tree's copy when there is one, so on the last card's branch a row added since was not offered: `card next` printed "no card is ready", and detached at `origin/main` it printed the row | next-card detaches at `card base-ref --fetch` before the pick, as quick does, and both return with `git checkout -` where they stop early | The second review's verdict on point 3, which the writer had cut down. |
+| "What it can push is one empty commit" is false when the start is a local base branch that is ahead: the claim published its unpushed commit too | Said in sections 8, 16 and 18, and `card claim` gives the count | 0.2 publishes them at handoff. |
+| The push runs the project's pre-push hook, which the choice of `commit-tree` was meant to avoid; one that fails left every claim unpushed with a warning | `git push --no-verify` | Not run with the option. |
+| `git branch --set-upstream-to` failed in a clone made with `--depth 1`, after the push and the checkout had succeeded | The call is gone; handoff's `git push -u` sets the upstream. Section 5.6 says what such a clone does not see | |
+| The branch was looked for before the card's state, so a merged card whose branch is still there printed `held here` | A done card is refused first | Every merged card has such a branch locally. |
+| Three commands were in `card help` before 0.2.0 as parts of features that end later; "a whole command" is not the rule design-0.2 wrote | All four commands are unknown until the skill that uses them | Design-0.2's rule and risk 8 of the scope stand as written. |
+| next-card's steps mixed two numberings, and its last step names a step that was gone | Eight steps, with the three sentences that name step 7 | |
+| A no to a quick card left the main working tree detached, where 0.2 left it on the base branch | `git checkout -` | |
+| The early hand run could not settle row 21: with the variable typed before it, the command is not one a rule for `card` matches | The variable is exported in the shell that starts `claude` | |
+| Seven nits: no row for a machine with no git identity; a hand commit with the subject got the mark; `held worktree` for a worktree removed by hand gives no way out; "three rows unverified" against four; the passes named in section 22 did not exist; the template and the README write the branch with a slug; the reviewer's file says "a base branch" | A row in section 15; the mark needs the `Claim:` line; `git worktree prune`; four; these two passes; named in section 4; said in section 12, with the prompt in 10.2 | |
+
+The scope was amended in fifteen sentences, each from the third agent's list: its status line, the items of "In 0.3" on the claim, since when, a worktree, parallel sessions, the losing side and the conflict report, "Compatibility", "How we know it works", risks 2 and 5, and decision 2. Risk 8 is unchanged.
+
+### The eight decisions
+
+| Point | In the draft | Decided |
+|---|---|---|
+| 1. Who pushes | `card claim` | Kept |
+| 2. A quick card's claim | After the yes; a refused claim stops | After the yes; a refused claim takes a new id |
+| 3. The base branch at a start | Every start detaches at `origin/<base>` | next-card and quick detach at the later of the two base refs, after a fetch |
+| 4. The mark | Only for a branch with a claim commit | Kept |
+| 5. What merges before 0.2.0 | A variable for `card claim`; items 1 to 7 | The variable hides all four commands; items 1 to 6 |
+| 6. The line that differs | A hash of seven values | 40 digits from `/dev/urandom` |
+| 7. Git versions | None stated | None for the claim; 2.38 for the conflict report |
+| 8. A branch name in a `held` line | Printed in a fixed form | Not printed; `card claim --resume` |
+
+Beyond the eight: every branch is `card/<id>`; the claim comes before `card plan start`; the commit is made with `git commit-tree` and pushed before the branch exists; handoff and the reviewer read `card fork-point`.
+
+Nobody reviewed the fixes that followed the third pass. A pass by the writing session on its own fixes would be weaker evidence, and none was made.
+
+Held when run by the second reviewer: `card plan start` on a detached HEAD in a linked worktree; `git fetch --prune origin` there; the stop hook on a detached HEAD, with only the claim commit, and after the approval commit; `card touched` with the claim commit; handoff's `--grep`, which matched only the approval commit; `card status`, unchanged; the cross-references of the design to the two earlier ones. By the third: `card show`, `list`, `status`, `plan start`, `plan check`, `lint` and `touched`, and the stop and post-tool-use hooks, on a branch `card/<id>` that holds only a claim, in the main tree and in a linked worktree; a checkout refused by an untracked file, which left no branch.
+
+Not run by anyone: anything in Claude Code (a `claude --worktree` session, the permission rules against a `card` that pushes, the hooks inside a session); anything on GitHub; `git push --no-verify` with a commit and a ref; two claims at the same instant; a git older than 2.54; `/dev/urandom` through `od` on Linux; the suite of this repository in a linked worktree. Rows 5, 6, 19 and 21 of the design's section 19 are unverified.
