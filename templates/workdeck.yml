@@ -3,11 +3,14 @@
 # standard Unix tools.
 name: workdeck
 on: pull_request
+permissions:
+  contents: read
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Pinned to a commit: a tag can be moved, a commit cannot.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Fetch card
         run: |
           curl -fsSL "https://raw.githubusercontent.com/<repo>/<tag>/bin/card" -o "$RUNNER_TEMP/card"

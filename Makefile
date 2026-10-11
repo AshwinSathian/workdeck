@@ -1,4 +1,4 @@
-.PHONY: test lint bench validate release-check
+.PHONY: test lint links check bench validate release-check
 
 # The whole suite, under the system bash (3.2 on macOS).
 test:
@@ -6,6 +6,13 @@ test:
 
 lint:
 	shellcheck -x -s bash bin/card hooks/*.sh scripts/*.sh test/*.sh test/cases/*.sh test/stubs/*
+
+# Every relative link and anchor in the markdown files. No network.
+links:
+	/bin/bash scripts/check-links.sh
+
+# What to run before a pull request.
+check: lint test links
 
 # Wall time the post-tool-use hook adds to a tool call.
 bench:

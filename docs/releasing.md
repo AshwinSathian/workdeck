@@ -43,7 +43,7 @@ In this order.
 
 The first job, `check`, runs on macOS and on Ubuntu, with read access only:
 
-1. What `ci.yml` checks, on the tagged commit: `make lint`, `make test`, `card lint` on this repository's deck, `make validate`, and on Ubuntu the suite again with awk as mawk and as gawk. A tag on a branch never went through `ci.yml`, so none of it is left out.
+1. What `ci.yml` checks, on the tagged commit: `make lint`, `make test`, `card lint` on this repository's deck, the link check, `make validate`, and on Ubuntu the suite again with awk as mawk and as gawk. A tag on a branch never went through `ci.yml`, so none of it is left out.
 2. `scripts/release-check.sh` against the tag's name without its `v`. This is the release-check of the version commit, run again where nobody can skip it.
 
 The second job, `publish`, runs only when both systems passed. It is the only one that may write:

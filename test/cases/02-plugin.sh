@@ -983,3 +983,139 @@ test_releasing_doc_lists_every_step_the_workflow_does_not_do() {
   assert_contains "$(readme_section Contributing)" '](docs/releasing.md)'
   grep -q -F '](docs/releasing.md)' "$ROOT/CONTRIBUTING.md" || fail 'CONTRIBUTING.md does not point at docs/releasing.md'
 }
+
+# M-02. The workflows this repository runs, and the one init offers to users.
+# These hold form: a test cannot parse YAML with the tools the repository allows.
+PINNED='uses: [A-Za-z0-9_./-]+@[0-9a-f]{40} # v[0-9][0-9.]*$'
+
+test_every_workflow_action_is_pinned_to_a_commit() {
+  local f n=0 bad
+  for f in "$ROOT"/.github/workflows/*.y*ml "$ROOT/templates/workdeck.yml"; do
+    bad=$(grep -n 'uses:' "$f" | grep -v -E "$PINNED")
+    [ -z "$bad" ] || fail "${f#"$ROOT"/} has an action that is not pinned to a commit with its version beside it: $bad"
+    n=$((n + $(grep -c 'uses:' "$f")))
+  done
+  [ "$n" -ge 3 ] || fail "only $n actions were found in the workflows"
+  # The pattern refuses a tag, a branch and a short commit.
+  for bad in 'uses: actions/checkout@v4' 'uses: actions/checkout@main' 'uses: actions/checkout@11d5960 # v4.4.0' \
+    'uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262'; do
+    ! printf '      - %s\n' "$bad" | grep -q -E "$PINNED" || fail "[$bad] counts as pinned"
+  done
+  # The pins are kept current, or they rot.
+  f="$ROOT/.github/dependabot.yml"
+  [ -s "$f" ] || fail '.github/dependabot.yml is missing'
+  grep -q '^  - package-ecosystem: "github-actions"$' "$f" || fail 'dependabot does not update github-actions'
+  grep -q '^      interval: "weekly"$' "$f" || fail 'dependabot does not run weekly'
+  # The linter is not an action: a script names its version and the checksum
+  # of each archive, and both systems get that version.
+  f="$ROOT/scripts/ci-shellcheck.sh"
+  grep -q '^VERSION=[0-9][0-9.]*$' "$f" || fail 'ci-shellcheck.sh does not name one shellcheck version'
+  assert_eq 2 "$(grep -c -E '^  [A-Za-z0-9_.]+\) arch=[a-z0-9_.]+ sum=[0-9a-f]{64} ;;$' "$f")" 'shellcheck archives with a checksum'
+  grep -q 'shasum -a 256 -c' "$f" || fail 'ci-shellcheck.sh does not check the archive'
+  for f in "$ROOT"/.github/workflows/*.y*ml; do
+    ! grep -q 'make lint' "$f" || grep -q 'run: /bin/bash scripts/ci-shellcheck.sh "$RUNNER_TEMP" >> "$GITHUB_PATH"$' "$f" || fail "${f#"$ROOT"/} lints with whatever shellcheck the runner has"
+    ! grep -q 'brew install shellcheck\|apt.* shellcheck' "$f" || fail "${f#"$ROOT"/} installs a shellcheck of no fixed version"
+  done
+  grep -q 'shellcheck --version' "$ROOT/.github/workflows/ci.yml" || fail 'ci.yml does not print the shellcheck version'
+}
+
+test_workflows_state_their_permissions() {
+  local f p
+  for f in "$ROOT"/.github/workflows/*.y*ml "$ROOT/templates/workdeck.yml"; do
+    grep -q '^permissions:' "$f" || fail "${f#"$ROOT"/} has no top-level permissions block"
+  done
+  # ci.yml and the template read, and write nothing.
+  for f in "$ROOT/.github/workflows/ci.yml" "$ROOT/templates/workdeck.yml"; do
+    p=$(awk '/^permissions:/ { on = 1; next } on && /^[^ ]/ { exit } on' "$f")
+    assert_eq '  contents: read' "$p" "permissions of ${f#"$ROOT"/}"
+    ! grep -q ': write' "$f" || fail "${f#"$ROOT"/} grants a write permission"
+  done
+  # CI runs the link check on both systems: it is a step of the matrix job.
+  grep -q '^        run: make links$' "$ROOT/.github/workflows/ci.yml" || fail 'ci.yml does not run the link check'
+  grep -q '^links:' "$ROOT/Makefile" || fail 'Makefile has no links target'
+  grep -q '^check: lint test links$' "$ROOT/Makefile" || fail 'make check does not run lint, test and links'
+  # Code owners: the maintainer for everything, and by name for the files
+  # where a change is a security change.
+  f="$ROOT/.github/CODEOWNERS"
+  [ -s "$f" ] || fail '.github/CODEOWNERS is missing'
+  for p in '*' '/bin/card' '/hooks/' '/templates/settings-permissions.json' '/.github/workflows/'; do
+    grep -q -E "^$(printf '%s' "$p" | sed 's/[.*]/\\&/g') +@AshwinSathian$" "$f" || fail "CODEOWNERS has no owner for $p"
+  done
+  [ "$(grep -n '^\* ' "$f" | cut -d: -f1)" -lt "$(grep -n '^/bin/card ' "$f" | cut -d: -f1)" ] || fail 'the rule for everything is not first: the last match wins'
+  # SECURITY.md says what is pinned and how a release is checked.
+  f="$ROOT/SECURITY.md"
+  grep -q 'pinned to a commit' "$f" || fail 'SECURITY.md does not say the actions are pinned'
+  grep -q 'gh attestation verify' "$f" || fail 'SECURITY.md does not say how a release is verified'
+}
+
+test_markdown_links_and_anchors_resolve() {
+  cd "$ROOT" || exit 1
+  run "$BASH" "$ROOT/scripts/check-links.sh"
+  assert_empty "$OUT" 'broken links in this repository'
+  assert_rc 0
+}
+
+test_check_links_reports_a_broken_link_and_a_broken_anchor() {
+  new_repo
+  mkdir -p sub cards
+  # shellcheck disable=SC2016
+  printf '%s\n' '# Top' '' '## Second heading' '' '## The `card` command, and more!' '' '## Twice' '' '## Twice' '' \
+    '## 21. Build order' '' '```' '## In a fence' '```' '' '## A [link](a.md) in it' > b.md
+  # shellcheck disable=SC2016
+  printf '%s\n' '# A' \
+    '[ok](b.md) [ok](b.md#second-heading) [ok](sub/) [ok](#a) [ok](b.md#the-card-command-and-more)' \
+    '[bad](nope.md)' \
+    '[ok](b.md#twice) [ok](b.md#twice-1) [bad](b.md#twice-2)' \
+    '[ext](https://example.invalid/nope.md#x) [mail](mailto:a@example.invalid)' \
+    '`[code](inline.md)` and [bad](b.md#in-a-fence)' \
+    '```' '[fenced](fenced.md)' '```' \
+    '[ok](b.md#21-build-order) [ok](b.md#a-link-in-it) [ok](<b.md> "a title")' \
+    '[bad](#nope)' \
+    '[ref]: gone.md' \
+    '```inline``` is not a fence, so this is read: [bad](after.md)' \
+    '``code with ` inside`` [bad](double.md) and `x`' \
+    '  [ref2]: gone2.md' \
+    "[ok](b.md 'a title') [ok](b.md?plain=1#top) [ok](sub/my%20file.md)" \
+    '[ok](b.md#dash--and-arrow--here) [ok](b.md#an-emphasised-word) [ok](b.md#snake_case-stays) [ok](b.md#indented)' > a.md
+  printf '%s\n' '' '## Dash — and arrow → here' '' '## An _emphasised_ word' '' '## snake_case stays' '' '   ## Indented' >> b.md
+  echo x > 'sub/my file.md'
+  printf '%s\n' '[ok](../b.md#top) [ok](/b.md) [bad](b.md) [bad](../b.md#Top)' > sub/c.md
+  # A Read item of a card that is not done is a path from the root with an
+  # anchor. A card that is done is a record: its Read items are not checked.
+  # shellcheck disable=SC2016
+  printf '%s\n' '---' 'id: X-01' 'done: false' '---' '' '## Read' '- b.md#second-heading (why)' '- b.md#nope' '- gone/' '- `b.md` (in backticks)' '' '## Touch' '- other.md' > cards/X-01-open.md
+  printf '%s\n' '---' 'id: X-02' 'done: true' '---' '' 'done: false' '' '## Read' '- gone.md#nope' > cards/X-02-done.md
+  # An ignored file is not read; one that is neither tracked nor ignored is.
+  echo 'ignored.md' > .gitignore
+  echo '[bad](nope.md)' > ignored.md
+  git add a.md b.md sub cards .gitignore
+  run "$BASH" "$ROOT/scripts/check-links.sh"
+  assert_rc 1
+  assert_eq 'a.md:3: nope.md
+a.md:4: b.md#twice-2
+a.md:6: b.md#in-a-fence
+a.md:11: #nope
+a.md:12: gone.md
+a.md:13: after.md
+a.md:14: double.md
+a.md:15: gone2.md
+cards/X-01-open.md:8: b.md#nope
+cards/X-01-open.md:9: gone/
+sub/c.md:1: b.md
+sub/c.md:1: ../b.md#Top' "$OUT" 'report'
+  assert_empty "$ERR" stderr
+  # It runs from a subdirectory, and outside a repository it is a usage error.
+  cd sub || exit 1
+  run "$BASH" "$ROOT/scripts/check-links.sh"; assert_rc 1
+  cd "$T" || exit 1
+  run "$BASH" "$ROOT/scripts/check-links.sh"; assert_rc 2
+  assert_contains "$ERR" 'check-links:'
+  # No network: the script names no tool that makes a call.
+  ! grep -n -E '(^|[^a-z-])(curl|wget|gh|nc|ssh|git (fetch|pull|push|clone|ls-remote)) ' "$ROOT/scripts/check-links.sh" | grep -v '^[0-9]*:#' || fail 'check-links.sh names a network tool'
+  # The cards directory is read from workdeck.conf, whatever letters it has.
+  cd "$T/repo" || exit 1
+  git mv cards tickets
+  echo 'cards_dir = tickets' > workdeck.conf
+  run "$BASH" "$ROOT/scripts/check-links.sh"
+  assert_contains "$OUT" 'tickets/X-01-open.md:8: b.md#nope'
+}
