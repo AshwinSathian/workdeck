@@ -794,3 +794,192 @@ test_evidence_records_the_hand_runs_of_plan_next_card_and_init() {
   [ -n "$s" ] || fail 'evidence has no section Not yet shown'
   ! printf '%s\n' "$s" | grep -q 'The DOC-02 session ran under' || fail 'Not yet shown still has the 0.1 text on init'"'"'s permission entries'
 }
+
+# M-01. mk_release_tree: a tree at $T/rel whose files all name 1.2.3, with
+# scripts/release-check.sh copied in; cd into it. The script reads the tree it
+# sits in, so a case changes one file there and runs the copy.
+mk_release_tree() {
+  local d="$T/rel"
+  mkdir -p "$d/bin" "$d/scripts" "$d/.claude-plugin"
+  cp "$ROOT/scripts/release-check.sh" "$d/scripts/" || fail 'scripts/release-check.sh is missing'
+  # shellcheck disable=SC2016
+  printf '%s\n' '#!/usr/bin/env bash' '# Version 1.2.3. https://example.invalid' 'readonly VERSION=1.2.3' 'echo "card $VERSION"' > "$d/bin/card"
+  printf '%s\n' '{' '  "name": "x",' '  "version": "1.2.3"' '}' > "$d/.claude-plugin/plugin.json"
+  printf '%s\n' '{' '  "name": "x"' '}' > "$d/.claude-plugin/marketplace.json"
+  printf '%s\n' '# Changelog' '' '## [Unreleased]' '' '## [1.2.3] - 2026-01-02' '' 'The third.' '' '### Added' '' '- A thing.' '' \
+    '## [1.2.2] - 2026-01-01' '' '- Older.' '' \
+    '[1.2.3]: https://example.invalid/releases/tag/v1.2.3' '[1.2.2]: https://example.invalid/releases/tag/v1.2.2' > "$d/CHANGELOG.md"
+  printf '%s\n' '# X' '' '```' 'curl -fsSL https://raw.githubusercontent.com/o/r/v1.2.3/bin/card -o card' '```' > "$d/README.md"
+  cd "$d" || exit 1
+}
+
+release_check() { run "$BASH" "$T/rel/scripts/release-check.sh" "$@"; }
+
+# release_fault <file> <sed expression> <file the report must name> [words]:
+# a fresh tree with one line changed fails, and the report names that file.
+release_fault() {
+  mk_release_tree
+  edit "$1" "$2"
+  release_check 1.2.3
+  assert_rc 1
+  printf '%s\n' "$OUT" | grep -q "^$3: " || fail "a fault in $1 is not reported as $3"
+  assert_eq 1 "$(printf '%s\n' "$OUT" | grep -c .)" "lines reported for a fault in $1"
+  [ -z "${4-}" ] || assert_contains "$OUT" "$4"
+}
+
+test_release_check_passes_on_this_tree_and_fails_on_a_version_mismatch() {
+  local v n
+  # This tree, at the version `card version` prints. Between releases the
+  # changelog holds work under [Unreleased], and a tree in that state is not
+  # ready to tag: the script must then report that, once, and nothing else.
+  # With nothing under [Unreleased], as straight after a release, it passes.
+  v=$("$BASH" "$CARD" version | sed 's/^card //')
+  n=$(awk '/^## \[/ { on = index($0, "[Unreleased]") > 0; next } on && NF' "$ROOT/CHANGELOG.md" | grep -c .)
+  run "$BASH" "$ROOT/scripts/release-check.sh" "$v"
+  if [ "$n" -eq 0 ]; then
+    assert_rc 0
+    assert_eq "release-check: $v ok" "$OUT" 'report on this tree'
+  else
+    assert_rc 1
+    assert_eq "CHANGELOG.md: $n lines are still under ## [Unreleased]" "$OUT" 'report on this tree'
+  fi
+
+  mk_release_tree
+  release_check 1.2.3; assert_rc 0; assert_empty "$ERR" stderr
+  release_check v1.2.3; assert_rc 0
+
+  release_fault bin/card 's/^readonly VERSION=.*/readonly VERSION=1.2.4/' bin/card "'card 1.2.4'"
+  release_fault bin/card 's/^# Version 1\.2\.3\./# Version 1.2.2./' bin/card
+  release_fault .claude-plugin/plugin.json 's/"version": "1\.2\.3"/"version": "1.2.2"/' '\.claude-plugin/plugin\.json'
+  release_fault .claude-plugin/marketplace.json 's/"name": "x"/"name": "x", "version": "1.2.2"/' '\.claude-plugin/marketplace\.json'
+  release_fault CHANGELOG.md 's/^## \[1\.2\.3\] - .*/## [1.3.0] - 2026-01-02/' 'CHANGELOG\.md'
+  release_fault CHANGELOG.md 's/^## \[1\.2\.3\] - .*/## [1.2.3]/' 'CHANGELOG\.md' 'date'
+  release_fault CHANGELOG.md 's/^## \[Unreleased\]$/&\
+\
+- Not released./' 'CHANGELOG\.md' '[Unreleased]'
+  release_fault CHANGELOG.md '/^\[1\.2\.3\]: /d' 'CHANGELOG\.md' 'link'
+  release_fault README.md 's|/v1\.2\.3/bin/card|/v1.2.2/bin/card|' 'README\.md' 'v1.2.2'
+  release_fault README.md 's|^curl .*|curl -fsSL https://example.invalid/card|' 'README\.md'
+
+  # A marketplace that names the version passes; the wrong version as the
+  # argument is reported once for each file that names another.
+  mk_release_tree
+  edit .claude-plugin/marketplace.json 's/"name": "x"/"name": "x", "version": "1.2.3"/'
+  release_check 1.2.3; assert_rc 0
+  release_check 1.2.4; assert_rc 1
+  for v in bin/card .claude-plugin/plugin.json .claude-plugin/marketplace.json CHANGELOG.md README.md; do
+    printf '%s\n' "$OUT" | grep -q "^$v: " || fail "the wrong version is not reported for $v"
+  done
+
+  release_check; assert_rc 2; assert_contains "$ERR" 'usage:'
+  release_check 1.2; assert_rc 2
+  release_check '1.2.3;x'; assert_rc 2
+  release_check 1.2.3 extra; assert_rc 2
+
+  # The notes are the entry without its heading, and nothing of its neighbors.
+  release_check --notes 1.2.3; assert_rc 0
+  assert_eq 'The third.' "$(printf '%s\n' "$OUT" | head -1)" 'first line of the notes'
+  assert_contains "$OUT" '- A thing.'
+  assert_not_contains "$OUT" 'Older'
+  assert_not_contains "$OUT" '## ['
+  release_check --notes 1.2.2; assert_rc 0
+  assert_eq '- Older.' "$OUT" 'notes of the last entry, without the link lines'
+  release_check --notes 9.9.9; assert_rc 1; assert_empty "$OUT" 'notes of no entry'
+
+  # A line in a code fence is not a heading, and a link definition that is
+  # not a version's stays in the notes.
+  mk_release_tree
+  edit CHANGELOG.md 's/^- A thing\.$/&\
+\
+```\
+## [9.9.9] in a fence\
+```\
+\
+See [the guide][g].\
+\
+[g]: https:\/\/example.invalid\/g/'
+  release_check 1.2.3; assert_rc 0
+  release_check --notes 1.2.3; assert_rc 0
+  assert_contains "$OUT" '## [9.9.9] in a fence'
+  assert_contains "$OUT" '[g]: https://example.invalid/g'
+  assert_not_contains "$OUT" 'Older'
+}
+
+# The workflow is not run here, and no tag is pushed: this reads the file.
+# It holds form: a test cannot parse YAML with the tools the repository allows.
+test_release_workflow_runs_the_check_and_publishes_card_with_its_checksum() {
+  local f="$ROOT/.github/workflows/release.yml" w n s
+  [ -s "$f" ] || fail '.github/workflows/release.yml is missing'
+  grep -q "^    tags: \['v\*'\]$" "$f" || fail 'the workflow does not run on a pushed tag v*'
+  ! grep -q 'branches:' "$f" || fail 'the workflow names a branch: the tag may be on a branch that is not main'
+  # shellcheck disable=SC2016
+  for w in 'make lint' 'make test' 'scripts/release-check.sh "${GITHUB_REF_NAME#v}"' 'scripts/release-check.sh --notes "${GITHUB_REF_NAME#v}"' \
+    'cp bin/card dist/card' 'sha256sum card > SHA256SUMS' 'subject-path: dist/card' \
+    'gh release create "$GITHUB_REF_NAME" dist/card dist/SHA256SUMS dist/card.sigstore.json' '--verify-tag' '--notes-file'; do
+    grep -q -F -- "$w" "$f" || fail "the workflow has no [$w]"
+  done
+  # Nothing is published before the checks: the job that publishes needs the
+  # job that checks, and the release is the last thing it does.
+  grep -q '^    needs: check$' "$f" || fail 'the publishing job does not wait for the check'
+  n=$(grep -n 'gh release create' "$f" | cut -d: -f1)
+  assert_empty "$(awk -v n="$n" 'NR > n && /uses:|run:/' "$f")" 'steps after the release is created'
+  n=$(grep -n '^  publish:$' "$f" | cut -d: -f1)
+  for w in 'run: make lint' 'run: make test' 'bin/card lint' 'run: make validate' 'for a in mawk gawk' 'scripts/release-check.sh "'; do
+    [ "$(grep -n -F -- "$w" "$f" | head -1 | cut -d: -f1)" -lt "$n" ] || fail "[$w] is not in the job that runs first"
+  done
+  ! grep -q 'continue-on-error\|always()\|failure()' "$f" || fail 'a step of the workflow runs after a failure'
+  # Started by hand it is a dry run: the two steps that need a tag are the
+  # only ones with that condition, and the release is one of them.
+  grep -q '^  workflow_dispatch:$' "$f" || fail 'the workflow cannot be started by hand for a dry run'
+  assert_eq 2 "$(grep -c "^        if: github.event_name == 'push'$" "$f")" 'steps that run only for a tag'
+  s=$(awk '/^      - name: Create the release$/ { getline; print; exit }' "$f")
+  assert_eq "        if: github.event_name == 'push'" "$s" 'the condition on the release step'
+  # Every action is pinned to a commit, with its version beside it.
+  n=$(grep -c 'uses:' "$f")
+  [ "$n" -ge 3 ] || fail "the workflow uses $n actions"
+  assert_eq "$n" "$(grep -c -E 'uses: [A-Za-z0-9_./-]+@[0-9a-f]{40} # v[0-9]' "$f")" 'actions pinned to a commit'
+  # Nothing is granted to the workflow as a whole; each job states its own,
+  # and only the job that publishes may write.
+  grep -q '^permissions: {}$' "$f" || fail 'the workflow grants a permission to every job'
+  assert_eq 2 "$(grep -c '^    permissions:$' "$f")" 'jobs that state their permissions'
+  n=$(grep -n '^  publish:$' "$f" | cut -d: -f1)
+  assert_empty "$(awk -v n="$n" 'NR < n && /: write/' "$f")" 'write permissions outside the publishing job'
+  assert_eq 'attestations: write contents: write id-token: write' \
+    "$(grep -o '[a-z-]*: write' "$f" | sort | tr '\n' ' ' | sed 's/ $//')" 'write permissions'
+  # The README shows how to check the download against what the workflow publishes.
+  s=$(readme_section Install)
+  assert_contains "$s" '/releases/download/'
+  assert_contains "$s" 'shasum -a 256 -c SHA256SUMS'
+  assert_contains "$s" 'gh attestation verify card --repo AshwinSathian/workdeck --signer-workflow AshwinSathian/workdeck/.github/workflows/release.yml'
+  grep -q '^release-check:' "$ROOT/Makefile" || fail 'Makefile has no release-check target'
+}
+
+test_releasing_doc_lists_every_step_the_workflow_does_not_do() {
+  local f=docs/releasing.md s w
+  [ -s "$ROOT/$f" ] || fail "$f is missing"
+  s=$(doc_section "$f" 'What stays by hand')
+  for w in 'The decision to tag' 'The version commit' 'The tag' "The repository's homepage" 'Announcing' 'scripts/release-check.sh' 'P-24'; do
+    assert_contains "$s" "$w"
+  done
+  # What the workflow does, in the words of the file it describes.
+  s=$(doc_section "$f" 'What the workflow does')
+  for w in 'make lint' 'make test' 'release-check' '`card`' '`SHA256SUMS`' '`card.sigstore.json`' 'CHANGELOG.md' 'does not deliver the plugin'; do
+    assert_contains "$s" "$w"
+  done
+  s=$(doc_section "$f" 'A release from a branch')
+  assert_contains "$s" 'section 22, decision 1'
+  assert_contains "$s" 'does not ask which branch'
+  s=$(doc_section "$f" 'Withdrawing a bad release')
+  assert_contains "$s" 'gh release delete'
+  assert_contains "$s" 'a new version'
+  s=$(doc_section "$f" 'A dry run')
+  assert_contains "$s" 'gh workflow run release.yml'
+  assert_contains "$s" 'read from the tagged commit'
+  s=$(doc_section "$f" 'The first run')
+  assert_contains "$s" 'P-24'
+  assert_contains "$s" 'gh attestation verify'
+  # The page the attestation step was written from.
+  grep -q -F 'docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations' "$ROOT/$f" || fail "$f does not cite the page on attestations"
+  assert_contains "$(readme_section Contributing)" '](docs/releasing.md)'
+  grep -q -F '](docs/releasing.md)' "$ROOT/CONTRIBUTING.md" || fail 'CONTRIBUTING.md does not point at docs/releasing.md'
+}

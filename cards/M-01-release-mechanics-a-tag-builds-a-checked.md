@@ -3,7 +3,7 @@ id: M-01
 title: Release mechanics: a tag builds a checked, attested release
 size: S
 depends:
-done: false
+done: true
 ---
 
 ## Read
@@ -51,3 +51,5 @@ done: false
 - `gh release create` is available on the runners, and `gh attestation verify` is how a user checks the provenance. Read the current GitHub documentation for the attestation action before writing the step, and cite the page in docs/releasing.md.
 - 0.2.0 may be tagged from a branch and not from main (design-0.2, section 22, decision 1). The workflow must not assume the tag is on main.
 - A user who has the plugin receives it when `version` changes on the main branch, wherever the tag is (design-0.2, section 19, row 18). The release workflow publishes the `card` file; it does not deliver the plugin. docs/releasing.md has to say so.
+- 2026-10-11, from this card's session and its review. Three things here go past the `Acceptance` above. The workflow can also be started by hand, as a dry run that does everything but the release check and the release: the workflow file is read from the tagged commit, so a fault in it found by the first tag could not be fixed for that tag. Its first job runs everything `ci.yml` runs, not only `make lint` and `make test`, because a tag on a branch never went through `ci.yml`. And the attestation is published as a third asset under the name `card.sigstore.json`.
+- The first `Tests` line says the check passes on this tree. It cannot before P-24: 25 lines are under `## [Unreleased]`. The test holds that the script reports exactly that and nothing else while the entry is there, and passes when it is not.

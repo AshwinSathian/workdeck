@@ -80,7 +80,15 @@ The plugin puts `card` on the PATH of the commands Claude runs. A new install ta
 curl -fsSL https://raw.githubusercontent.com/AshwinSathian/workdeck/v0.1.3/bin/card -o card && chmod +x card
 ```
 
-From 0.1.1, each [release](https://github.com/AshwinSathian/workdeck/releases) also carries `card` and `card.sha256`, so you can check the file with `shasum -a 256 -c card.sha256`.
+A [release](https://github.com/AshwinSathian/workdeck/releases) made after 0.1.3 is built from its tag by a workflow, and carries `card`, `SHA256SUMS` and a build provenance attestation for `card`. Check the file you downloaded against them, with the release's tag in place of `<tag>`:
+
+```
+curl -fsSL https://github.com/AshwinSathian/workdeck/releases/download/<tag>/SHA256SUMS -o SHA256SUMS
+shasum -a 256 -c SHA256SUMS     # on Linux: sha256sum -c SHA256SUMS
+gh attestation verify card --repo AshwinSathian/workdeck --signer-workflow AshwinSathian/workdeck/.github/workflows/release.yml
+```
+
+The first command fetches the checksum, the second compares it with `card`, and the third checks that the release workflow of this repository built the file. The releases of 0.1.1 and 0.1.2 carry `card` and `card.sha256` instead, and the tag `v0.1.3` has no release page.
 
 ## Quick start
 
@@ -293,7 +301,7 @@ Those cards were driven by hand in one long session, without the plugin loaded, 
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). `make test` and `make lint` are the two commands to know.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). `make test` and `make lint` are the two commands to know. How a release is made is in [`docs/releasing.md`](docs/releasing.md).
 
 ## License
 

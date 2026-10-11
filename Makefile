@@ -1,4 +1,4 @@
-.PHONY: test lint bench validate
+.PHONY: test lint bench validate release-check
 
 # The whole suite, under the system bash (3.2 on macOS).
 test:
@@ -10,6 +10,11 @@ lint:
 # Wall time the post-tool-use hook adds to a tool call.
 bench:
 	/bin/bash scripts/bench-hook.sh
+
+# Is the tree ready to be tagged? make release-check VERSION=0.2.0
+# docs/releasing.md says when to run it.
+release-check:
+	/bin/bash scripts/release-check.sh $(VERSION)
 
 # Needs Claude Code on PATH.
 validate:

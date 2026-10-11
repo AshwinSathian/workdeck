@@ -1,0 +1,104 @@
+# Builds a release from a pushed tag. docs/releasing.md is the checklist a
+# maintainer follows, and says what this workflow does not do.
+#
+# The tag may be on a branch that is not main (docs/design-0.2.md, section 22,
+# decision 1), so nothing here asks which branch the tag is on.
+#
+# Started by hand (workflow_dispatch) it is a dry run: every step but the
+# release check and the release itself, so a fault in this file is found
+# before a tag is spent on it.
+name: release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+# Nothing for the workflow as a whole: each job states what it needs.
+permissions: {}
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  # What ci.yml checks, on the tagged commit, and the release check against
+  # the tag's name. A tag on a branch never went through ci.yml, so nothing
+  # of it is left out here. Nothing is published unless both systems pass.
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # The checkout is shallow and has only the pushed tag.
+      # test/cases/70-compat.sh reads bin/card of this release.
+      - name: Fetch the v0.1.3 tag
+        run: git fetch --depth 1 origin tag v0.1.3
+      - name: Install shellcheck
+        run: command -v shellcheck || brew install shellcheck
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Shellcheck
+        run: make lint
+      - name: Test
+        run: make test
+      - name: Lint this repository's own cards
+        run: /bin/bash bin/card lint
+      - name: Validate the plugin and marketplace manifests
+        run: make validate
+      - name: Test with awk as mawk and as gawk
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y gawk mawk > /dev/null
+          for a in mawk gawk; do
+            mkdir -p "$RUNNER_TEMP/$a"
+            ln -sf "$(command -v "$a")" "$RUNNER_TEMP/$a/awk"
+            PATH="$RUNNER_TEMP/$a:$PATH" /bin/bash test/run.sh
+          done
+      # A tag that is not v<number>.<number>.<number> stops here, with a
+      # usage error: a pre-release tag builds nothing.
+      - name: Check that every file names the tag's version
+        if: github.event_name == 'push'
+        run: /bin/bash scripts/release-check.sh "${GITHUB_REF_NAME#v}"
+
+  publish:
+    needs: check
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # create the release
+      id-token: write # the signing certificate of the attestation
+      attestations: write # store the attestation
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Build the assets
+        run: |
+          mkdir dist
+          cp bin/card dist/card
+          (cd dist && sha256sum card > SHA256SUMS && sha256sum -c SHA256SUMS)
+          cat dist/SHA256SUMS
+      # Build provenance for card: which workflow, commit and ref produced
+      # this file. `gh attestation verify card --repo <owner>/<repo>` checks it.
+      - name: Attest card
+        id: attest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/card
+      - name: Copy the attestation
+        env:
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          cp "$BUNDLE" dist/card.sigstore.json
+          test -s dist/card.sigstore.json
+      # Last, and only for a tag, so that a failure above publishes nothing.
+      # --verify-tag refuses to create a tag that is not on the remote.
+      - name: Create the release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          /bin/bash scripts/release-check.sh --notes "${GITHUB_REF_NAME#v}" > "$RUNNER_TEMP/notes.md"
+          gh release create "$GITHUB_REF_NAME" dist/card dist/SHA256SUMS dist/card.sigstore.json \
+            --verify-tag --title "WorkDeck ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/notes.md"
