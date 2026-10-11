@@ -16,11 +16,16 @@ jobs:
         os: [macos-15, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     steps:
+      # The whole history: the test of docs/specimen.md counts merge commits
+      # up to the commit the page names, and fails in CI without them.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      # The checkout is shallow and has no tags. test/cases/70-compat.sh reads
-      # bin/card of this release and fails in CI without it.
+        with:
+          fetch-depth: 0
+      # test/cases/70-compat.sh reads bin/card of this release and fails in
+      # CI without it. A checkout of the whole history brings the tags, so
+      # this only makes sure. No --depth here: it would cut the history again.
       - name: Fetch the v0.1.3 tag
-        run: git fetch --depth 1 origin tag v0.1.3
+        run: git fetch origin tag v0.1.3
       # One version on both systems, checked against a checksum. The script
       # holds the version.
       - name: Install shellcheck

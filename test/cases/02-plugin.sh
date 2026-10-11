@@ -1382,3 +1382,145 @@ test_contributing_walks_a_first_change_through_a_card() {
   assert_contains "$s" '](SUPPORT.md)'
   assert_contains "$s" '](docs/README.md)'
 }
+
+# M-05. The specimen page and the script that prints its figures.
+specimen_stats() { run "$BASH" "$ROOT/scripts/specimen-stats.sh" "$@"; }
+
+test_specimen_stats_counts_a_fixture_deck() {
+  local c want
+  new_repo
+  mk_conf
+  mk_card A-01 XS '' true
+  mk_card A-02 S A-01 true two
+  mk_card A-02b S A-02 false rest
+  mk_card B-01 M '' false three
+  # Not cards: an outline, and the review rules.
+  mkdir -p cards/plan docs/development test/cases
+  printf '%s\n' '---' 'prefix: A' '---' '' '## A-09 A row' '- size: S' > cards/plan/a.md
+  echo '# Rules' > cards/REVIEW.md
+  mk_log A-01 2026-10-05 1 done XS 1200
+  mk_log A-02 2026-10-05 1 split S 3400
+  mk_log A-02 2026-10-06 2 review-fixes S 100
+  mk_log B-01 2026-10-06 1 done M 0
+  # Not a log: no front matter names a card.
+  echo '# About these logs' > log/README.md
+  echo 'test_spaced() { :; }' > 'test/cases/03 c.sh'
+  edit log/2026-10-06-B-01-1.md 's/^\([a-z]*_tokens\): [0-9]*$/\1: unknown/'
+  edit log/2026-10-06-B-01-1.md 's/^budget_tokens: unknown$/budget_tokens: 100000/'
+  # Two passes; a heading in a fence is not one.
+  # shellcheck disable=SC2016
+  printf '%s\n' '# Reviews' '' '## First pass' '' '```' '## In a fence' '```' '' '## Second pass' '### A part' > docs/development/review-0.1.md
+  printf '%s\n' 'helper() { :; }' 'test_one() { :; }' 'test_two() { :; }' '  test_indented() { :; }' > test/cases/01-a.sh
+  printf '%s\n' 'test_three() { :; }' > test/cases/02-b.sh
+  commit_all deck
+  git commit -q --allow-empty -m 'Merge pull request #1 from o/card/A-01-thing'
+  git commit -q --allow-empty -m 'Merge pull request #2 from o/card/A-02-two'
+  git commit -q --allow-empty -m 'Merge pull request #3 from o/plan/2610100000'
+  git commit -q --allow-empty -m 'Merge pull request #4 from o/docs/a-fix'
+  git commit -q --allow-empty -m 'A change that was squashed (#5)'
+  git commit -q --allow-empty -m 'A subject that says Merge pull request #6 from o/card/x in its middle'
+  c=$(git rev-parse HEAD)
+  want="commit: $c
+cards: 4
+cards by prefix: A 3, B 1
+cards by size: XS 1, S 2, M 1
+cards with a remainder id: 1 (A-02b)
+session logs: 4
+session logs with measured tokens: 3
+session logs that end in a split: 1
+pull requests merged from card/ branches: 2
+pull requests merged from plan/ branches: 1
+pull requests merged from other branches: 1
+squash merges, branch not recorded: 1
+review passes recorded: 2
+tests in the suite: 4"
+  specimen_stats
+  assert_rc 0
+  assert_eq "$want" "$OUT" 'figures of the fixture'
+  # The figures of a commit do not change when the tree does: they are read
+  # from git, not from the working files.
+  mk_card C-01 S '' false later
+  echo 'test_four() { :; }' >> test/cases/02-b.sh
+  commit_all later
+  specimen_stats "$c"; assert_rc 0
+  assert_eq "$want" "$OUT" 'figures of the earlier commit'
+  specimen_stats; assert_contains "$OUT" 'cards: 5'
+  assert_contains "$OUT" 'cards by prefix: A 3, B 1, C 1'
+  assert_contains "$OUT" 'tests in the suite: 5'
+  # Usage, a commit that does not exist, and no repository.
+  specimen_stats a b; assert_rc 2; assert_contains "$ERR" 'usage:'
+  specimen_stats no-such-commit; assert_rc 2; assert_contains "$ERR" 'specimen-stats:'
+  cd "$T" || exit 1
+  specimen_stats; assert_rc 2
+  ! grep -n -E '(^|[^a-z-])(curl|wget|gh|nc|ssh|git (fetch|pull|push|clone|ls-remote)) ' "$ROOT/scripts/specimen-stats.sh" | grep -v '^[0-9]*:#' || fail 'specimen-stats.sh names a network tool'
+}
+
+test_specimen_figures_match_the_script() {
+  local f="$ROOT/docs/specimen.md" c line k v n=0
+  [ -s "$f" ] || fail 'docs/specimen.md is missing'
+  cd "$ROOT" || exit 1
+  # The page names the commit its figures were printed for.
+  c=$(sed -n 's/^The figures are those of commit `\([0-9a-f]*\)`.*/\1/p' "$f")
+  [ "${#c}" -eq 40 ] || fail 'the page does not name the commit of its figures'
+  # A copy with no history, or a shallow one, cannot count merges.
+  if ! git cat-file -e "$c^{commit}" 2>/dev/null || [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" != false ]; then
+    [ -z "${CI-}" ] || fail "the history up to $c is required in CI"
+    echo "skip: no history up to $c in this copy"
+    return 0
+  fi
+  specimen_stats "$c"
+  assert_rc 0
+  printf '%s\n' "$OUT" > "$T/figures"
+  while IFS= read -r line; do
+    k=${line%%: *}
+    v=${line#*: }
+    [ "$k" = commit ] && continue
+    grep -q -x -F "| $k | $v |" "$f" || fail "the page does not have the figure [$k: $v]"
+    n=$((n + 1))
+  done < "$T/figures"
+  [ "$n" -ge 12 ] || fail "the script printed $n figures"
+  # Every row of the table is a figure of the script: the heading row and
+  # the rule above the figures are the only others.
+  assert_eq "$((n + 2))" "$(doc_section docs/specimen.md 'The figures' | grep -c '^|')" 'rows of the table of figures'
+}
+
+test_specimen_page_points_at_files_that_exist() {
+  local f=docs/specimen.md p s w
+  [ -s "$ROOT/$f" ] || fail "$f is missing"
+  cd "$ROOT/docs" || exit 1
+  # Every path the page links, with any anchor cut off.
+  for p in $(grep -o '](\([^)]*\)' "$ROOT/$f" | sed 's/^](//; s/#.*//' | grep -v '^http' | grep . | sort -u); do
+    [ -e "$p" ] || fail "$f links $p, which does not exist"
+  done
+  # Every path it names in backticks that looks like a file of this repository.
+  for p in $(grep -o '`[A-Za-z0-9_./-]*/[A-Za-z0-9_./-]*`' "$ROOT/$f" | tr -d '`' | sort -u); do
+    [ -e "$ROOT/$p" ] || [ -e "$p" ] || fail "$f names $p, which does not exist"
+  done
+  # Every pull request is a number with a link to it.
+  assert_eq "$(grep -o 'pull request [0-9][0-9]*' "$ROOT/$f" | grep -c .)" \
+    "$(grep -o '\[pull request [0-9][0-9]*\](https://github.com/AshwinSathian/workdeck/pull/[0-9][0-9]*)' "$ROOT/$f" | grep -c .)" 'pull requests named with a link'
+  assert_empty "$(grep -o '\[pull request [0-9]*\]([^)]*)' "$ROOT/$f" | sed 's/\[pull request \([0-9]*\)\](.*\/pull\/\([0-9]*\))/\1 \2/' | awk '$1 != $2')" 'links to another pull request than the one named'
+  # The practices, what went wrong, and no claim that the method works.
+  s=$(cat "$ROOT/$f")
+  for w in '## A scope note before a design' '## A design that says how each claim is known' '## An adversarial review' \
+    '## A decision overturned by a review' '## A card that was split' '## A card whose `Touch` grew' \
+    '## A session log with measured tokens, and one without' '## A finding that changed the design' \
+    '## A hand run, with what was not run' '## A test that holds form and says so' '## Something left out on purpose' \
+    '## What went wrong, and what is still wrong' '## The figures' '](evidence.md)' 'has not been measured'; do
+    assert_contains "$s" "$w"
+  done
+  # The four the card names are in the section on what went wrong, and
+  # each bullet there has a record to open.
+  s=$(doc_section "$f" 'What went wrong, and what is still wrong')
+  for w in 'unknown' 'Nobody reviewed' 'unverified' 'one byte'; do
+    assert_contains "$s" "$w"
+  done
+  assert_eq 0 "$(printf '%s\n' "$s" | grep '^- ' | grep -c -v '](')" 'bullets of what went wrong that link nothing'
+  ! grep -q -i -w 'model' "$ROOT/$f" || fail "$f calls the repository a model"
+  # The README's section is a paragraph and a link, and the indexes list the page.
+  s=$(readme_section 'How this was built')
+  assert_contains "$s" '](docs/specimen.md)'
+  [ "$(printf '%s\n' "$s" | grep -c .)" -le 2 ] || fail 'the README section is more than its heading and a paragraph'
+  grep -q -F '](specimen.md)' "$ROOT/docs/README.md" || fail 'docs/README.md does not list the page'
+  grep -q -F '](../specimen.md)' "$ROOT/docs/development/README.md" || fail 'docs/development/README.md has no row for the page'
+}

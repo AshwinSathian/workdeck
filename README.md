@@ -295,9 +295,7 @@ To ask for something or argue against one of these, [open an issue](https://gith
 
 ## How this was built
 
-A coding agent built it under supervision, from a written design, and the records are in this repository. The order was: a [design](docs/design.md), an adversarial review of it, a [plan](docs/development/plan-0.1.md), then the code, test first. Once `card` could run cards, the rest of the work became cards in [`cards/`](cards/), each done on its own branch, through the gates, with a log in [`log/`](log/).
-
-Those cards were driven by hand in one long session, without the plugin loaded, so their logs say `unknown` for the token fields. One card, the license, was run by the maintainer through `/workdeck:next-card` and `/workdeck:handoff`, and merged as [pull request 1](https://github.com/AshwinSathian/workdeck/pull/1). Of the 24 session logs for 0.1, its log is the only one with measured figures. What went wrong along the way, including three independent reviews and what they overturned, is in [`docs/development/findings.md`](docs/development/findings.md).
+A coding agent built it under supervision, from a written design, test first, and then card by card with its own cards, gates and logs. The records are in this repository. [`docs/specimen.md`](docs/specimen.md) reads the repository as a worked example: for each practice it names a real file, card, log or pull request and says what to notice, and it says with the same weight what went wrong and what is still wrong.
 
 ## Contributing
 

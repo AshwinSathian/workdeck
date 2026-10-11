@@ -31,6 +31,8 @@ Read these three in order: each adds to the one before and is numbered the same 
 
 None of this is needed to use WorkDeck. It is here so that every decision can be traced.
 
+- [`specimen.md`](specimen.md): living. Start here. This repository read as a worked example: what to look at, practice by practice, what went wrong, and a table of figures that a script prints.
+
 - [`development/README.md`](development/README.md): living. The index of the records below, with a longer line on each.
 - [`development/plan-0.1.md`](development/plan-0.1.md): record. The build plan of 0.1, written before any code and kept as written.
 - [`development/findings.md`](development/findings.md): record, added to. What turned out wrong or awkward while building, with the evidence and what was decided.
