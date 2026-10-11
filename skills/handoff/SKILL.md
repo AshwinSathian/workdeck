@@ -20,6 +20,8 @@ The first line above names the current branch and its card. If the branch is not
 
 Work through the steps in order. Each gate must pass before the next step starts.
 
+Write and change every file (a card, an outline, a test, code, the session log) with the Write and Edit tools, not with `python3`, `cat >>`, `sed -i` or another shell command: a shell command that writes a file comes as one prompt with whatever is chained to it, and the tools show the change alone. The exception is a file that a `card` command writes: run the command the step names.
+
 1. **Check.** Run `card conf check` to get the project's check command, then run that command. Fix failures that belong to this card. If a failure was there before this card (it is in code the card did not touch and fails the same way on `<base>`), report it and stop; do not fix it here.
 
 2. **Gates.** Run these in order and stop at the first that fails:
@@ -35,7 +37,7 @@ Work through the steps in order. Each gate must pass before the next step starts
 
 5. **Mark it done.** Run `card done <id>`. This reaches `<base>` only when the pull request merges.
 
-6. **Write the session log.** Run `card log-new <id> <outcome>`, where the outcome is `done`, `split`, or `review-fixes` for a session that addressed review comments. The command prints the file and fills in the measured fields; do not edit those. Fill in the four sections, 40 lines at most in total: `Done`, `Tests`, `Deviations` (anything that differs from the card), `Follow-ups`. Run `card lint`.
+6. **Write the session log.** Run `card log-new <id> <outcome>`, where the outcome is `done`, `split`, or `review-fixes` for a session that addressed review comments. The command prints the file and fills in the measured fields; do not edit those. The growth is measured here, in step 6, and leaves out step 7: the figure in the log, and in the pull request body that takes it from the log, is short by what the commit, the push and the pull request cost. Fill in the four sections, 40 lines at most in total: `Done`, `Tests`, `Deviations` (anything that differs from the card), `Follow-ups`. Run `card lint`.
 
 7. **Commit, push, open the pull request.**
    - `git add -A` and `git commit` with a message that names the card id, in the style the project's history uses.

@@ -3,7 +3,7 @@ id: F-04
 title: Skills say to write files with the edit tools; what the growth figure leaves out
 size: S
 depends:
-done: false
+done: true
 ---
 
 ## Read

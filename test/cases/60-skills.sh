@@ -187,9 +187,10 @@ SENTENCES
   part=$(grep -n 'card as approved' "$f" | head -1 | cut -d: -f1)
   assert_eq "$((commit + 1))" "$part" 'line of the addition'
   # One addition: without that line the skill is what it was in 0.1, split mode
-  # included, but for the sentence of F-01 that the push is its own command.
+  # included, but for the sentence of F-01 that the push is its own command
+  # and the two of F-04, on the edit tools and on what the growth leaves out.
   assert_eq 1 "$(grep -c 'card as approved' "$f")" 'lines that name the approval commit'
-  assert_eq '2103718737 4358' "$(grep -v 'card as approved' "$f" | cksum)" 'handoff without the addition'
+  assert_eq '1990117034 4953' "$(grep -v 'card as approved' "$f" | cksum)" 'handoff without the addition'
 }
 
 # Hand runs of 2026-10-11 (docs/evidence.md): a push that led a longer command
@@ -537,6 +538,39 @@ test_plan_skill_writes_no_card_and_no_code() {
   ! grep -n -E 'card (new|done|log-new|plan start|plan check)' "$f" || fail 'the plan skill names a command that writes a card'
   ! grep -n 'reference/implement.md' "$f" || fail 'the plan skill points at the implementation steps'
   assert_contains "$(plan_step 9)" 'the outline is the only file that changed. If anything else changed, revert it first'
+}
+
+# Hand runs of 2026-10-11 (docs/evidence.md): sessions wrote the outline, a
+# card, tests, code and the log with `python3`, `cat >>` and `sed -i`, each
+# chained with other commands, and each of those commands waited.
+test_skills_say_to_write_files_with_the_edit_tools() {
+  local f
+  for f in "$ROOT/reference/implement.md" "$NEXT_SKILL" "$PLAN_SKILL" "$ROOT/skills/handoff/SKILL.md"; do
+    # shellcheck disable=SC2016
+    assert_eq 1 "$(grep -c -F 'Write and change every file (a card, an outline, a test, code, the session log) with the Write and Edit tools, not with `python3`, `cat >>`, `sed -i` or another shell command: a shell command that writes a file comes as one prompt with whatever is chained to it, and the tools show the change alone. The exception is a file that a `card` command writes: run the command the step names.' "$f")" "lines of $f that say to write files with the edit tools"
+    # Once: a second wording would be a second rule.
+    assert_eq 1 "$(grep -c 'Write and Edit tools' "$f")" "lines of $f that name the edit tools"
+  done
+}
+
+# The same runs: the growth in the two session logs was 13,463 and 14,974, and
+# the transcripts gave 18,808 and 19,512.
+test_handoff_says_what_the_growth_figure_leaves_out() {
+  local f="$ROOT/skills/handoff/SKILL.md" s
+  s=$(awk '/^[0-9]+\. / { on = $1 == "6." } on' "$f")
+  assert_contains "$s" 'do not edit those. The growth is measured here, in step 6, and leaves out step 7: the figure in the log, and in the pull request body that takes it from the log, is short by what the commit, the push and the pull request cost. Fill in the four sections'
+  # No step is reordered: the log is still written before the commit.
+  [ "$(grep -n 'card log-new <id>' "$f" | head -1 | cut -d: -f1)" -lt "$(grep -n 'git commit' "$f" | head -1 | cut -d: -f1)" ] || fail 'handoff commits before it writes the log'
+  # shellcheck disable=SC2016
+  grep -q -F 'The measured fields of a session log are filled in by `card log-new`, which handoff runs before its commit. The growth in a log, and in what `card stats` prints from the logs, leaves out the commit, the push and the pull request' "$ROOT/docs/reference.md" || fail 'docs/reference.md does not say what the measured fields leave out'
+}
+
+test_plan_skill_says_what_the_growth_figure_leaves_out() {
+  # shellcheck disable=SC2016
+  assert_contains "$(plan_step 9)" '   - the three figures `card tokens` printed before the commit. They leave out the commit, the push and the pull request: say so beside them;'
+  # The step says when: a figure taken while the body is written holds the
+  # commit and the push (review of F-04).
+  assert_contains "$(plan_step 9)" 'revert it first. Run `card tokens` and keep the three figures it prints for the body: they are taken here, before the commit. Run `git add <outline>` and `git commit`.'
 }
 
 INIT_SKILL="$ROOT/skills/init/SKILL.md"

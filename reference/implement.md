@@ -2,6 +2,8 @@
 
 You are on the card's branch. The card is the contract: what to read, which files to touch, which tests must exist, and what must be true at the end. These steps are shared by `/workdeck:next-card` and `/workdeck:quick`.
 
+Write and change every file (a card, an outline, a test, code, the session log) with the Write and Edit tools, not with `python3`, `cat >>`, `sed -i` or another shell command: a shell command that writes a file comes as one prompt with whatever is chained to it, and the tools show the change alone. The exception is a file that a `card` command writes: run the command the step names.
+
 1. **Read.** Read every item under `Read`, and the existing code for every path under `Touch`. Do not read further without first saying why in one line.
 
 2. **Plan.** State a plan of at most 10 lines. If the card cannot be done as written (a path that does not exist, a dependency that is not there, a question only a person can answer), stop. Add a `## Blocked` section with the question to the card and ask the user. When the question is answered, remove the `## Blocked` section and put the answer under `Notes`.
