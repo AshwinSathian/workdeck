@@ -3,7 +3,7 @@ id: M-05
 title: Specimen page: this repository read as a worked example
 size: S
 depends: M-03, M-04
-done: false
+done: true
 ---
 
 ## Read
@@ -24,6 +24,8 @@ done: false
 - docs/development/README.md (one row)
 - docs/README.md (one line; M-03 creates the file)
 - test/cases/02-plugin.sh
+- .github/workflows/ci.yml the checkout takes the whole history: the test of the page's figures counts merge commits, and a checkout of one commit has none
+- .github/workflows/release.yml the same, because its first job runs the same suite
 
 ## Tests
 - test_specimen_figures_match_the_script
@@ -47,4 +49,6 @@ done: false
 ## Notes
 - This card can run before or after P-23. If before, the page's links to the trial are sentences that say it is to come, and P-23's session adds them: say so in the handoff so that P-23's `Touch` gains the file.
 - Pull request numbers come from merge commit subjects (`Merge pull request #N from .../card/...`). A squash merge has another subject; the script should count both forms and the page should say how it counts.
+- 2026-10-11, from this card's session. The figures are those of one commit, which the page names, and the script takes a commit as its argument. The `Acceptance` does not ask for this. Without it the table would be wrong after every merge, and every card would have to change the page. The cost: nothing moves the pin, and the page says so. P-24 is the natural card to move it.
+- This card ran before P-23, so the page says the trial has not been run. P-23's `Touch` should gain docs/specimen.md.
 - "Model" is the maintainer's word for what this repository should be. The page should not use it of itself: it shows the work and lets the reader judge.

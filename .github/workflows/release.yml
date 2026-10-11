@@ -30,11 +30,13 @@ jobs:
     permissions:
       contents: read
     steps:
+      # The whole history, as in ci.yml: one test counts merge commits.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      # The checkout is shallow and has only the pushed tag.
+        with:
+          fetch-depth: 0
       # test/cases/70-compat.sh reads bin/card of this release.
       - name: Fetch the v0.1.3 tag
-        run: git fetch --depth 1 origin tag v0.1.3
+        run: git fetch origin tag v0.1.3
       - name: Install shellcheck
         run: /bin/bash scripts/ci-shellcheck.sh "$RUNNER_TEMP" >> "$GITHUB_PATH"
       - name: Install Claude Code
