@@ -872,3 +872,51 @@ Decisions taken on what the pull request left open:
 Held when run by the second reviewer: the two sentences of the page are word for word; the plain pushes match an allow rule and no deny rule; `gh pr create --title "F-01:x"` is not a `git push`; with `*:m*` removed four tests fail, and with `git push *:*` put back the test for a mixed rule fails; both skill tests fail when the sentence is shortened; no other skill, `reference/implement.md` or the README shows a chained push.
 
 Not run: an interactive start, so the warning at start is as the program reads; how Claude Code splits a compound command or drops a redirect before it matches. Nobody reviewed the fixes that followed the second review.
+
+## Twenty-sixth pass, 2026-10-11: the reviews of F-02
+
+F-02 made step 7 of the plan skill say what the plan reviewer is launched with, step 9 say how the body lists the findings, and the plan reviewer leave `git hash-object` alone. Two agents that did not write it reviewed it: the handoff reviewer before the pull request was opened, and a second, told to break it and to attack the decision proposed for each open item, after. Neither had a must-fix. The maintainer told the session to take every decision the pull request left open. Both were general-purpose agents: the plugin was not loaded in the session, which followed the skill files by hand.
+
+The handoff review:
+
+| Found | Decided | Why |
+|---|---|---|
+| A decision of the user written as a `not` line is not what a `not` line is: "Cutting rows" has it name the row that owns the work, and the reviewer's step 3 checks that row. A second run given only the path and the base branch can raise the question again | Left at the handoff; see the second review | The card's acceptance asks for the wording. |
+| "On the first launch and on the second" names two launches, and an outline edited in step 8 is reviewed again | "and on each launch after an edit in step 8" | That launch is the one most likely to follow a decision. |
+| A decision about a row that already has a card cannot go into the outline: step 5 leaves such a row alone | Left at the handoff; the sentence of the second review covers it | The finding is kept with the decision, and no line is needed. |
+
+The second review:
+
+| Found | Decided | Why |
+|---|---|---|
+| "Does not raise the question again" is not what was seen: all three reviewer runs on the Opus outline of P-21 raised a should-fix on such `not` lines. "Fix every `must-fix` finding" then has the session undo the decision, or delete the line | A sentence in step 7: a finding that asks for what the user has decided against, or that objects to the line that records the decision, is not fixed, is kept with the user's decision as what was done, and is shown in step 8. A choice of the session is not a decision of the user | The reviewer cannot tell a decision from a choice, so it is not told to accept such a line. Step 8 is the guard: the user sees the finding. |
+| The sentence widens a `not` line against three definitions, not one: "Cutting rows", `docs/reference.md` and section 5 of the design. `card plan start` copies each into `Out of scope` | Left, as a line in `later.md` | A question for the design, and not for an XS card. |
+| 15 of 44 mutations of the new sentences passed: the tests of steps 7 and 9 held fragments, so a clause between or after them went unseen. Among them the clause on a launch after an edit, "add a summary" after the colon and "A nit may be left out" | Each of the two tests now holds its sentences as one string with the words on either side | With these and the row below, one of the 44 passed: a change to the reviewer's opening line, which this card did not write. |
+| The test of the plan reviewer read the whole file and counted lines: the sentence moved to another step passed, and so did a second sentence on the same line that says to hash | It reads step 1, with the words on either side, and counts the times `hash-object` is named | Step 1 is one line. |
+| The list after the colon left out what a first launch was given: the session's own choices | "of what you chose while writing" is in the list | The card's notes have it, and its acceptance item does not. |
+| "So that the second run reads it there" is wrong for a decision made in step 8 | "the next run" | Departs from the card's words. |
+| "Before you were launched" is false for a plan reviewer that the plan skill did not launch | The words are gone | The hand launches of the twenty-fourth pass were such. |
+| The step 8 table shows no `not` line, so a line written for a decision is not shown back | Left, as a line in `later.md` | |
+| Step 7 does not say when a decision goes into the outline: after a yes with a remark in step 8 a session could add a line nobody reviewed | Left | The kept finding needs no line, and step 8 sends an edit back to step 6. |
+| The card's `Touch` lacked this file | Added, with `later.md` | As for F-01. |
+| "Both runs" in steps 7 and 9, with more than two launches possible | Left, as a line in `later.md` | So on the main branch too. The design and two older tests hold the words. |
+| The pull request body listed a fixed nit under findings left open, and named two of the places a `not` line is defined | The body is rewritten | |
+| No card owns seeing a session follow these sentences | An `Acceptance` item in P-23, with a note | P-23 reads the bodies of the trial's plan runs, and has the transcripts. |
+
+Decisions taken on what the pull request left open:
+
+1. The `not` line that holds a decision. The card's wording stays, with the sentence above. What a `not` line may hold is in `later.md`.
+2. A decision about a row that has a card. No further text: the finding is kept with the decision.
+3. "As the reviewer gave it" in the last sentence of step 7, which the card asks for in step 9 only. Kept: step 9 cannot give what step 7 did not keep.
+4. The launches after an edit in step 8. Kept, and now held by a test.
+5. `test_plan_reviewer_does_not_hash_the_specification` in `test/cases/60-skills.sh`, with the other tests of the plan reviewer in `test/cases/02-plugin.sh`. Kept where the card's `Touch` puts it.
+6. The measured fields, all `unknown`. Left: the skills were not installed, and the figures cannot be rebuilt.
+7. The review by a general-purpose agent, not `workdeck:reviewer`. Accepted, as said in the pull request.
+8. Nobody has seen a session follow the sentences. Does not hold the merge; P-23 has an `Acceptance` item for it.
+9. A line in the changelog. None: the plan skill and the plan reviewer are both under Added in the unreleased section, so nothing released has changed.
+
+Held when run or read by the second reviewer: step 6 runs `card plan` before every launch, on the resume path of step 2, after an edit in step 8 and after a fix in step 7; `card plan` hashes the specification of the working tree, the file the reviewer reads, and a difference is one line with exit 0, so it does not stop a session; no sentence of the README, the changelog, `docs/reference.md`, the templates or the other skills says of step 7, step 9 or the reviewer's prompt what the diff made false; the design says less than the skill and nothing against it.
+
+Not run: any Claude Code session, so whether a session or the plan reviewer follows the new sentences, and whether the reviewer still runs `git hash-object`.
+
+The second reviewer then attacked these amendments in the working tree: 32 mutations of the amended sentences, 14 of them from its first round, and none passed. The suite, `card lint`, `card touched F-02`, `card tests F-02` and shellcheck on `test/cases/60-skills.sh` held on a copy. It had no must-fix finding. It asked for the note in P-23 to be an `Acceptance` item, for "objects to the line" where step 7 had "is on the line", which forbade fixing any fault of that line, and for three corrections to this pass; all were made. Nobody reviewed those.
