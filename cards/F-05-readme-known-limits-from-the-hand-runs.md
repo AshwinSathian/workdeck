@@ -3,7 +3,7 @@ id: F-05
 title: README Known limits from the hand runs
 size: XS
 depends: F-01, F-04
-done: false
+done: true
 ---
 
 ## Read
@@ -14,6 +14,7 @@ done: false
 ## Touch
 - README.md
 - test/cases/02-plugin.sh
+- docs/development/review-0.2.md (the record of the reviews, the twenty-ninth pass)
 
 ## Tests
 - test_readme_known_limits_say_what_the_hand_runs_showed
