@@ -1,0 +1,13 @@
+# The workflows pin every action to a commit. This keeps the pins current:
+# one pull request a week for the actions that have a newer release.
+# It reads .github/workflows/ only. templates/workdeck.yml and the shellcheck
+# version in scripts/ci-shellcheck.sh are changed by hand.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]

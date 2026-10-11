@@ -38,6 +38,12 @@ What WorkDeck does trust:
 
 `/workdeck:init` offers allow and deny rules for `.claude/settings.json`. The deny rules stop the forms of `git push --force`, branch deletion, `git reset --hard` and `gh pr merge` that an agent normally writes. Claude Code matches these rules against the command text, so a command written another way (`git -C . push ...`) is not matched. Protect your base branch on the git host: require pull requests and block force pushes there.
 
+## What this repository pins, and how to check a release
+
+Every action in this repository's workflows, and in the workflow `/workdeck:init` offers, is pinned to a commit, and the shellcheck that CI downloads is checked against a checksum. Claude Code is installed at its latest version there on purpose, so that a change which breaks the manifests is seen.
+
+A release made after 0.1.3 carries `card`, `SHA256SUMS` and a build provenance attestation: `shasum -a 256 -c SHA256SUMS` checks the file, and `gh attestation verify card --repo AshwinSathian/workdeck` checks that this repository's workflow built it. The [README](README.md#install) has the commands in full.
+
 ## Supported versions
 
 Only the latest release gets fixes.

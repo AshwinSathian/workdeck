@@ -1,0 +1,10 @@
+# The last matching line wins, so the rule for everything comes first.
+* @AshwinSathian
+
+# A change to one of these is a security change: what runs on a user's
+# machine, what an agent is allowed to run without a prompt, and what runs
+# with this repository's token.
+/bin/card @AshwinSathian
+/hooks/ @AshwinSathian
+/templates/settings-permissions.json @AshwinSathian
+/.github/workflows/ @AshwinSathian
