@@ -301,7 +301,7 @@ Those cards were driven by hand in one long session, without the plugin loaded, 
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). `make test` and `make lint` are the two commands to know. How a release is made is in [`docs/releasing.md`](docs/releasing.md).
+[`CONTRIBUTING.md`](CONTRIBUTING.md) walks a first change through the loop, and says how decisions are made here. A question goes where [`SUPPORT.md`](SUPPORT.md) says. There is a [code of conduct](CODE_OF_CONDUCT.md), and [`docs/README.md`](docs/README.md) is a map of the documentation. `make check` runs lint, the tests and the link check; CI also validates the manifests and runs the tests under two more awks. How a release is made is in [`docs/releasing.md`](docs/releasing.md).
 
 ## License
 

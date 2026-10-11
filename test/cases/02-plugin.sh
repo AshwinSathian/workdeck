@@ -397,7 +397,7 @@ test_permission_template_allows_what_next_card_runs() {
 
 test_repository_has_the_files_a_stranger_looks_for() {
   local f
-  for f in .gitattributes .gitignore .editorconfig SECURITY.md CHANGELOG.md CONTRIBUTING.md Makefile; do
+  for f in .gitattributes .gitignore .editorconfig SECURITY.md CHANGELOG.md CONTRIBUTING.md Makefile SUPPORT.md CODE_OF_CONDUCT.md LICENSE docs/README.md; do
     [ -s "$ROOT/$f" ] || fail "$f is missing"
   done
   grep -q 'eol=lf' "$ROOT/.gitattributes" || fail '.gitattributes does not pin LF; card rejects CRLF'
@@ -1118,4 +1118,143 @@ sub/c.md:1: ../b.md#Top' "$OUT" 'report'
   echo 'cards_dir = tickets' > workdeck.conf
   run "$BASH" "$ROOT/scripts/check-links.sh"
   assert_contains "$OUT" 'tickets/X-01-open.md:8: b.md#nope'
+}
+
+# M-03. An issue form is YAML with a fixed schema, and a form that does not
+# parse is shown as no template at all, with no error. A test cannot parse
+# YAML with the tools the repository allows, so these hold form, not a parse:
+# each question is there, under the key and at the indent the schema gives it.
+
+# form_field <file> <id>: the lines of the element with that id, from its
+# "- type:" line to the line before the next element.
+form_field() {
+  awk -v id="    id: $2" '
+    /^  - type: / { if (hit) exit; buf = ""; }
+    { buf = buf $0 "\n" }
+    $0 == id { hit = 1 }
+    END { if (hit) printf "%s", buf }' "$1"
+}
+
+# form_requires <file> <id> <type>: the element exists, is of that type, has
+# a label, and is required.
+form_requires() {
+  local e
+  e=$(form_field "$1" "$2")
+  [ -n "$e" ] || fail "$(basename "$1") has no question with the id $2"
+  assert_contains "$e" "  - type: $3"
+  printf '%s\n' "$e" | grep -q '^      label: .' || fail "$2 has no label"
+  printf '%s\n' "$e" | grep -A1 '^    validations:$' | grep -q '^      required: true$' || fail "$2 is not a required question"
+}
+
+test_issue_forms_ask_for_what_a_bug_needs() {
+  local d="$ROOT/.github/ISSUE_TEMPLATE" f k e
+  assert_no_file "$d/bug.md"
+  assert_no_file "$d/idea.md"
+  for f in "$d/bug.yml" "$d/idea.yml"; do
+    [ -s "$f" ] || fail "${f#"$ROOT"/} is missing"
+    for k in name description body; do
+      grep -q "^$k:" "$f" || fail "${f#"$ROOT"/} has no top-level $k"
+    done
+    ! grep -q "$(printf '\t')" "$f" || fail "${f#"$ROOT"/} has a tab: YAML refuses one as an indent"
+    # An id and a label are unique in a form.
+    assert_empty "$(grep '^    id: ' "$f" | sort | uniq -d)" "repeated ids in ${f#"$ROOT"/}"
+    assert_empty "$(grep '^      label: ' "$f" | sort | uniq -d)" "repeated labels in ${f#"$ROOT"/}"
+    # The shape of every element: a known type; `attributes` and `validations`
+    # at the element's indent and nowhere else; a question has an id and a
+    # label; markdown has its text and a dropdown its options.
+    k=$(grep -c '^  - type: ' "$f")
+    assert_empty "$(grep '^  - type: ' "$f" | grep -v -x '  - type: \(markdown\|textarea\|input\|dropdown\)')" "unknown element types in ${f#"$ROOT"/}"
+    assert_eq "$k" "$(grep -c '^    attributes:$' "$f")" "elements with attributes in ${f#"$ROOT"/}"
+    assert_eq "$k" "$(grep -c 'attributes:' "$f")" "attributes keys in ${f#"$ROOT"/}"
+    e=$(grep -c '^  - type: markdown$' "$f")
+    assert_eq "$e" "$(grep -c '^      value: |$' "$f")" "markdown elements with text in ${f#"$ROOT"/}"
+    assert_eq "$((k - e))" "$(grep -c '^    id: [a-z][a-z0-9-]*$' "$f")" "questions with an id in ${f#"$ROOT"/}"
+    assert_eq "$((k - e))" "$(grep -c '^      label: .' "$f")" "questions with a label in ${f#"$ROOT"/}"
+    assert_eq "$((k - e))" "$(grep -c '^    validations:$' "$f")" "questions that say whether they are required in ${f#"$ROOT"/}"
+    assert_eq "$((k - e))" "$(grep -c 'validations:' "$f")" "validations keys in ${f#"$ROOT"/}"
+    assert_eq "$((k - e))" "$(grep -c '^      required: \(true\|false\)$' "$f")" "required keys in ${f#"$ROOT"/}"
+    assert_eq "$(grep -c '^  - type: dropdown$' "$f")" "$(grep -c '^      options:$' "$f")" "dropdowns with options in ${f#"$ROOT"/}"
+  done
+  [ "$(grep -c '^        - .' "$d/bug.yml")" -ge 2 ] || fail 'the dropdown of the bug form has fewer than two options'
+  f="$d/bug.yml"
+  form_requires "$f" what-happened textarea
+  form_requires "$f" expected textarea
+  form_requires "$f" card-version input
+  form_requires "$f" git-version input
+  form_requires "$f" claude-version input
+  form_requires "$f" system input
+  form_requires "$f" install dropdown
+  e=$(form_field "$f" install)
+  assert_contains "$e" 'marketplace'
+  assert_contains "$e" '--plugin-dir'
+  for k in '`card version`' '`git --version`' '`claude --version`'; do
+    grep -q -F -- "$k" "$f" || fail "the bug form does not name the command $k"
+  done
+  # The session log is asked for and is not required.
+  e=$(form_field "$f" session-log)
+  [ -n "$e" ] || fail 'the bug form does not ask for the session log'
+  assert_not_contains "$e" 'required: true'
+  # What not to paste.
+  for k in 'transcript' 'token' 'private path'; do
+    grep -q -i "$k" "$f" || fail "the bug form does not say not to paste a $k"
+  done
+  # The idea form asks what the person was doing and what they did instead
+  # before it asks for a solution, and points at what is already known.
+  f="$d/idea.yml"
+  form_requires "$f" doing textarea
+  form_requires "$f" instead textarea
+  [ -n "$(form_field "$f" solution)" ] || fail 'the idea form does not ask for a solution'
+  assert_eq 'doing instead solution' "$(sed -n 's/^    id: //p' "$f" | tr '\n' ' ' | sed 's/ $//')" 'order of the idea form'
+  grep -q -F 'docs/development/later.md' "$f" || fail 'the idea form does not link later.md'
+  grep -q -F 'README.md#roadmap' "$f" || fail 'the idea form does not link the roadmap'
+  f="$d/config.yml"
+  grep -q '^blank_issues_enabled: false$' "$f" || fail 'blank issues are not turned off'
+  grep -q -F '/security/' "$f" || fail 'config.yml does not link the security policy'
+  grep -q -F 'SUPPORT.md' "$f" || fail 'config.yml does not link SUPPORT.md'
+  assert_eq "$(grep -c '^  - name: ' "$f")" "$(grep -c '^    url: https://' "$f")" 'contact links with a url'
+  assert_eq "$(grep -c '^  - name: ' "$f")" "$(grep -c '^    about: ' "$f")" 'contact links with an about line'
+}
+
+test_docs_index_lists_every_file_under_docs() {
+  local f=docs/README.md p n=0
+  [ -s "$ROOT/$f" ] || fail "$f is missing"
+  cd "$ROOT" || exit 1
+  # Every tracked file at the first two levels, and every directory below
+  # them, is the target of a link on the map.
+  for p in $(git ls-files docs | awk -F/ 'NF <= 3 { print; next } { print $1 "/" $2 "/" $3 "/" }' | sort -u); do
+    [ "$p" = "$f" ] && continue
+    grep -q -F "](${p#docs/})" "$f" || fail "$f has no link to $p"
+    n=$((n + 1))
+  done
+  [ "$n" -ge 15 ] || fail "only $n paths under docs/ were found"
+  # One line each: a link is the first thing on its line, in a list or a table.
+  assert_eq 0 "$(grep -c '^[^-|#].*](.*\.md).*](.*\.md)' "$f")" 'lines of prose that hold two files'
+  grep -q 'never edited' "$f" || fail "$f does not say which files are records"
+  grep -q -F '](docs/README.md)' README.md || fail 'README does not link the map of docs/'
+}
+
+test_contributing_walks_a_first_change_through_a_card() {
+  local s w
+  s=$(doc_section CONTRIBUTING.md 'A first change, step by step')
+  [ -n "$s" ] || fail 'CONTRIBUTING.md has no walk through a first change'
+  for w in 'gh repo fork' '--plugin-dir' '/workdeck:quick "' '/workdeck:next-card' 'make check' '/workdeck:handoff' \
+    '`card lint`' '`card touched' '`card tests' 'The reviewer' 'The maintainer' 'Without Claude Code'; do
+    assert_contains "$s" "$w"
+  done
+  s=$(doc_section CONTRIBUTING.md 'How decisions are made')
+  [ -n "$s" ] || fail 'CONTRIBUTING.md does not say how decisions are made'
+  for w in 'One person merges' 'adversarial review' 'docs/development/' 'cards/REVIEW.md'; do
+    assert_contains "$s" "$w"
+  done
+  for w in 'SUPPORT.md' 'make check'; do
+    grep -q -F "$w" "$ROOT/CONTRIBUTING.md" || fail "CONTRIBUTING.md does not name $w"
+  done
+  # SUPPORT.md: where a question goes, what is not done, what to include.
+  s=$(cat "$ROOT/SUPPORT.md")
+  for w in '## Where a question goes' '## What the maintainer does not do' '## What to include' 'other than Claude Code' 'private' 'card version'; do
+    assert_contains "$s" "$w"
+  done
+  s=$(readme_section Contributing)
+  assert_contains "$s" '](SUPPORT.md)'
+  assert_contains "$s" '](docs/README.md)'
 }

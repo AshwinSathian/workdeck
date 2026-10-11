@@ -3,7 +3,7 @@ id: M-03
 title: Community files: issue forms, support, a map of the docs
 size: S
 depends:
-done: false
+done: true
 ---
 
 ## Read
