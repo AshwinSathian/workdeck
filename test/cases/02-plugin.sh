@@ -597,9 +597,28 @@ test_readme_names_the_plan_skill_and_warns_about_an_untrusted_specification() {
   assert_contains "$s" 'It does not offer the pull request template, the CI workflow or the settings for teammates there'
   assert_contains "$(readme_section 'What the plugin runs')" 'a commit that changes only the cards directory does not count'
   assert_contains "$(readme_section 'When it stops')" 'the commits must change something outside the cards directory'
+}
+
+# The two bullets that waited for the hand runs say what docs/evidence.md has.
+test_readme_known_limits_say_what_the_hand_runs_showed() {
+  local s b e
   s=$(readme_section 'Known limits')
-  assert_contains "$s" '`git push -u origin plan/<name> 2>&1`'
-  assert_contains "$s" 'read from the entries, not from a run'
+  assert_not_contains "$s" '- Not run:'
+  assert_contains "$s" 'a redirect and a pipe after the branch name did not make a deny rule match'
+  assert_contains "$s" 'The skills now run the push as its own command'
+  b=$(printf '%s\n' "$s" | grep '^- Some commands are not pre-approved: `git checkout`, `git pull`, `git add` and `git commit`\.') || fail 'Known limits has no bullet on the commands that are not pre-approved'
+  assert_contains "$b" 'five hand-run sessions'
+  assert_contains "$b" 'wrote a file from the shell'
+  assert_contains "$b" 'several chained commands'
+  assert_contains "$b" 'inferred from a pasted terminal and from waits in the transcripts'
+  assert_contains "$b" 'no prompt was recorded as such'
+  assert_contains "$b" '](docs/evidence.md)'
+  assert_not_contains "$b" 'has not been recorded'
+  # No command the bullet names has a permission entry: the first two words of
+  # each allow entry, written as the start of a code span.
+  while IFS= read -r e; do
+    assert_not_contains "$b" "\`$e"
+  done < <(awk '/"deny"/ { exit } /"Bash\(/ { sub(/.*Bash\(/, ""); sub(/\).*/, ""); if ($1 != "<check>") print ($2 == "" || $2 == "*" ? $1 : $1 " " $2) }' "$ROOT/templates/settings-permissions.json")
 }
 
 # Design 0.2, section 8, the rows for a 0.1 user, and the limits of section 11.3.
