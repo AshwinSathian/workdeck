@@ -18,6 +18,8 @@ What the user wants: `$ARGUMENTS`
 
 Work through these steps in order. Stop where a step says stop.
 
+Write and change every file (a card, an outline, a test, code, the session log, the body of a pull request) with the Write and Edit tools, not with `python3`, `cat >>`, `sed -i` or another shell command: a shell command that writes a file comes as one prompt with whatever is chained to it, and the tools show the change alone. The exceptions are what a `card` or `git` command that a step names writes itself, and what a tool of the project generates, a lockfile or a snapshot among them: run the command. A change of your own to such a file is made with the tools.
+
 1. **Check.** If the state above is an error starting with `card:`, explain it and stop. If the description is empty, ask for one. Run `git status --porcelain`; if it prints anything, stop and ask the user what to do with the changes.
 
 2. **Start from the base branch.** Run `card conf base`, check that branch out, and if the repository has a remote run `git pull --ff-only`.

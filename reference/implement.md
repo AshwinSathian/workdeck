@@ -2,7 +2,7 @@
 
 You are on the card's branch. The card is the contract: what to read, which files to touch, which tests must exist, and what must be true at the end. These steps are shared by `/workdeck:next-card` and `/workdeck:quick`.
 
-Write and change every file (a card, an outline, a test, code, the session log) with the Write and Edit tools, not with `python3`, `cat >>`, `sed -i` or another shell command: a shell command that writes a file comes as one prompt with whatever is chained to it, and the tools show the change alone. The exception is a file that a `card` command writes: run the command the step names.
+Write and change every file (a card, an outline, a test, code, the session log, the body of a pull request) with the Write and Edit tools, not with `python3`, `cat >>`, `sed -i` or another shell command: a shell command that writes a file comes as one prompt with whatever is chained to it, and the tools show the change alone. The exceptions are what a `card` or `git` command that a step names writes itself, and what a tool of the project generates, a lockfile or a snapshot among them: run the command. A change of your own to such a file is made with the tools.
 
 1. **Read.** Read every item under `Read`, and the existing code for every path under `Touch`. Do not read further without first saying why in one line.
 

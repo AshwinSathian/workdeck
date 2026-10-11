@@ -22,6 +22,10 @@ done: true
 - skills/handoff/SKILL.md
 - docs/reference.md
 - test/cases/60-skills.sh
+- skills/quick/SKILL.md (the same sentence: its step 4 fills in a card before the session reads `reference/implement.md`; from the second review)
+- CHANGELOG.md (two lines under Changed; from the second review)
+- docs/development/review-0.2.md (the record of the reviews of this card, as every card of 0.2 has one)
+- docs/development/later.md (seven lines from the second and third reviews, for what this card leaves)
 
 ## Tests
 - test_skills_say_to_write_files_with_the_edit_tools
@@ -41,5 +45,6 @@ done: true
 ## Notes
 - From the hand runs: every file a session wrote with a shell command came as a prompt chained with other commands, where a yes to the edit was also a yes to the rest. The Write and Edit tools ask too, in default mode, but show the change alone.
 - The figure left out about 5,000 tokens in each of the two card sessions, and 1,607 and 4,182 in the two plan runs.
+- From the reviews (`docs/development/review-0.2.md`, twenty-eighth pass), beyond the `Acceptance` items: the sentence also names the body of a pull request and has exceptions for what a `card` or `git` command of a step writes itself and for what a tool of the project generates; the quick skill has the sentence too; the plan skill runs `card tokens` before its commit; handoff says to put the note beside the figure and not to measure again.
 - The handoff skill and steps 1 to 5 of next-card are held by checksums in test/cases/60-skills.sh. Put the new sentence where a sum allows it or update the sum, and say so in the log.
 - This card edits `skills/plan/SKILL.md` and `test/cases/60-skills.sh`, as F-01, F-02 and F-04 all do, and F-01 and F-04 both edit `skills/handoff/SKILL.md`. No dependency is written, because none needs the other's text. Start one after the other is merged.
