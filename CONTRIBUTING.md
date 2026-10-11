@@ -40,4 +40,4 @@ These are checked in review; the full list is in [`cards/REVIEW.md`](cards/REVIE
 
 WorkDeck is developed with itself. Work is a card in `cards/`, done on a branch named `card/<id>-<slug>`, and handed off with a session log in `log/`. `card list` shows the deck. If you would rather send a plain pull request, that is fine: say what it changes and how you tested it.
 
-Design notes are in `docs/`. [`docs/development/findings.md`](docs/development/findings.md) records what went wrong while building and what was decided about it.
+Design notes are in `docs/`. [`docs/releasing.md`](docs/releasing.md) is the checklist for a release. [`docs/development/findings.md`](docs/development/findings.md) records what went wrong while building and what was decided about it.
