@@ -1,6 +1,6 @@
 ---
 id: T-01
-title: Scope, design and review for 0.3
+title: Scope note for 0.3
 size: M
 depends:
 done: true
@@ -21,6 +21,7 @@ done: true
 
 ## Touch
 - docs/development/scope-0.3.md (new)
+- docs/development/review-0.3.md (new; added after the handoff: the reviews of the note and the decisions taken are its first pass)
 - docs/development/README.md (one row per new record)
 - test/cases/02-plugin.sh (one case; the tests gate needs a named test)
 
@@ -29,13 +30,14 @@ done: true
 
 ## Acceptance
 - The scope note is one page and says what 0.3 is (teams: claiming a card, worktrees, parallel sessions), who it is for, what is out and the open risks.
-- The note is a draft and its status line says so: the maintainer has not approved it, and it ends with the questions that are the maintainer's to decide, each with a recommendation.
+- The note's six questions are decided, by the session on the maintainer's instruction and after a review by an agent told to break it. The status line says who decided and that the merge of the pull request is the approval, and the note ends with the six decisions.
+- docs/development/review-0.3.md lists each finding of the agents that reviewed the note, with what was decided.
 - Every claim in the note about Claude Code or git behavior cites the documentation page it came from or the run that showed it, and anything not checked is marked unverified.
 - The design was not started.
 - No file under bin/, hooks/, skills/, agents/, templates/ or reference/ changed.
 
 ## Out of scope
-- The design, the review record and the design as amended from the review. T-01b owns them, and the approval of this note with them.
+- The design, its review and the design as amended from the review. T-01b owns them.
 - A deck for 0.3. The planner writes it in the 0.2 trial (P-22 and P-23); this card writes no card.
 - Product code for 0.3.
 - Any change to docs/design-0.2.md or to a card of the 0.2 deck, except P-22's dependency, which the split moved to T-01b.
@@ -48,5 +50,6 @@ done: true
 - PLAN-01 took more than one session for the same four outputs. If the budget warning appears, hand off with `/workdeck:handoff split`: the scope note is the natural first part. P-22 is a card with a file and does not wait for a remainder, so in that handoff change P-22's `depends` from T-01 to the remainder that writes docs/design-0.3.md.
 - 0.2 left these to 0.3: claiming, worktrees and parallel sessions, a script check that orders cards touching the same file, and two people planning at once (docs/design-0.2.md, section 2).
 - The reviewer is a subagent launched for the purpose, not the session that wrote the design. Its reading stays out of this session's context, which is most of what makes the card fit. A pass by the writing agent is weaker evidence and the record says so where one is made, as the third part of docs/development/review-0.2.md does.
-- 2026-10-11: split at handoff after the first of the four outputs, as the note above foresees. This card holds the scope note as a draft; T-01b holds the rest, and P-22 now depends on T-01b.
+- 2026-10-11: split at handoff after the first of the four outputs, as the note above foresees. This card holds the scope note; T-01b holds the rest, and P-22 now depends on T-01b. The title was "Scope, design and review for 0.3" until then, and the file and the branch keep that name.
+- 2026-10-11, after the pull request was opened: the maintainer told the session to have it attacked and to take the note's six decisions. Two of the six recommendations were overturned and a third amended, after a second and a third review. The record is docs/development/review-0.3.md.
 - test_docs_have_one_design_file_and_a_development_folder fails on any tracked file that names one of the old documentation directories; its pattern lists them.

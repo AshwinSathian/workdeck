@@ -1,6 +1,6 @@
 # Development records
 
-How WorkDeck 0.1 was built, and how 0.2 was planned. None of this is needed to use it; the design is in [`../design.md`](../design.md).
+How WorkDeck 0.1 was built, how 0.2 was planned, and the scope of 0.3. None of this is needed to use it; the design is in [`../design.md`](../design.md).
 
 | File | What it is |
 |---|---|
@@ -11,6 +11,7 @@ How WorkDeck 0.1 was built, and how 0.2 was planned. None of this is needed to u
 | [`../design-0.2.md`](../design-0.2.md) | The design of 0.2. It adds to the 0.1 design and is numbered the same way. Its section 21 is the order the 0.2 cards follow. |
 | [`review-0.2.md`](review-0.2.md) | Two adversarial reviews of the 0.2 scope and design, each by an agent that did not write what it reviewed, a third pass on the amendments, a fourth made while the deck was written, and a fifth on what the spike asked for. Each finding has its evidence and what was decided. |
 | [`spike-0.2.md`](spike-0.2.md) | The spike before the 0.2 build: a draft of the plan skill and of the plan reviewer, run by hand on two specifications before any check was written. What the outlines got wrong, whether a card can be written from one row, and whether the outline format holds. The drafts and the outlines are in [`spike-0.2/`](spike-0.2/). |
-| [`scope-0.3.md`](scope-0.3.md) | The scope of 0.3, teams: claiming a card, worktrees and parallel sessions. What it is, who it is for, what is out and the open risks. One page, written before the design. A draft: the maintainer has not approved it, and it ends with the questions that are theirs to decide. |
+| [`scope-0.3.md`](scope-0.3.md) | The scope of 0.3, teams: claiming a card, worktrees and parallel sessions. What it is, who it is for, what is out and the open risks. One page, written before the design. It ends with six decisions, taken by the session that wrote it on the maintainer's instruction. |
+| [`review-0.3.md`](review-0.3.md) | The reviews of the 0.3 scope, by agents that did not write it, with each finding, what was decided and the six decisions. The design's reviews are added when it is written. |
 
 The repository's own cards are in [`../../cards/`](../../cards/) and its session logs in [`../../log/`](../../log/). WorkDeck 0.1 was built card by card with its own card files, gates and logs, driven by hand in one long agent session. Those logs record `unknown` for the measured token fields, because one session's growth does not describe any single card. The exception is DOC-02, which the maintainer ran through the plugin and merged as pull request 1. See [`../evidence.md`](../evidence.md) for the measurements.
