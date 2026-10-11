@@ -3,3 +3,9 @@ contact_links:
   - name: Report a vulnerability
     url: https://github.com/AshwinSathian/workdeck/security/advisories/new
     about: Please report security problems privately, not in a public issue.
+  - name: Security policy
+    url: https://github.com/AshwinSathian/workdeck/blob/main/SECURITY.md
+    about: What counts as a security problem here, and what WorkDeck runs on your machine.
+  - name: A question, or help with using WorkDeck
+    url: https://github.com/AshwinSathian/workdeck/blob/main/SUPPORT.md
+    about: Where a question goes, what to include, and what the maintainer does not do.

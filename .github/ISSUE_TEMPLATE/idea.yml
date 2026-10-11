@@ -1,0 +1,33 @@
+# An issue form. The schema is fixed, and a form that does not parse is shown
+# as no template at all, with no error: after a change, open "New issue" on
+# the repository and look. test/cases/02-plugin.sh holds the questions.
+name: Idea or question
+description: Something card, a hook or a skill should do, or something the docs do not answer
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Look first at what is already known: [what was left out on purpose](https://github.com/AshwinSathian/workdeck/blob/main/docs/development/later.md) and the [roadmap](https://github.com/AshwinSathian/workdeck/blob/main/README.md#roadmap). An idea that is there is still welcome, with what you ran into.
+
+        A question goes here too: say in the title that it is one. [SUPPORT.md](https://github.com/AshwinSathian/workdeck/blob/main/SUPPORT.md) says what to include.
+  - type: textarea
+    id: doing
+    attributes:
+      label: What you were doing when you wanted it
+      description: The work, not the feature. Which card, which step of the loop, what kind of repository. For a question, what you are trying to do.
+    validations:
+      required: true
+  - type: textarea
+    id: instead
+    attributes:
+      label: What you did instead
+      description: A workaround, another tool, or nothing. This says what the idea is worth. For a question, what you tried and what the docs say now.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would help
+      description: A solution, if you have one in mind. It is the last question on purpose.
+    validations:
+      required: false
