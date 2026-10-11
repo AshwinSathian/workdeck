@@ -50,6 +50,7 @@ done: false
 - The README's Evidence section. A quick card after the tag decision.
 
 ## Notes
+- 2026-10-11, from docs/development/plan-0.2.0.md: the website is planned from docs/site-spec.md with the planner while the trial runs. Its cards are planned cards in this repository and are not trial cards: record them in a third table, with the same measures, and do not count them toward the ten. Its plan run is recorded with the other plan runs. The cards M-01 to M-05 are hand-written and are not in any table.
 - The second repository may be private. Then its figures are from its logs and cannot be checked from outside; say so, as the page does for the quick-card run of 0.1.
 - The measure "files added to `Touch` after approval" is read from the part of each pull request body that handoff writes (P-15). If a body lacks it, `git diff <approval commit> HEAD -- <card file>` on the merged branch gives the same.
 - With ten cards no count carries a threshold: a planner that misses a file on half its cards passes a "more than half" test 62 times in 100. Do not write one into the page.

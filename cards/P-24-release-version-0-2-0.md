@@ -2,7 +2,7 @@
 id: P-24
 title: Release: version 0.2.0
 size: XS
-depends: P-23
+depends: P-23, M-01, M-02, M-03, M-04, M-05
 done: false
 ---
 
@@ -23,6 +23,7 @@ done: false
 - README.md (the download line, the Upgrade section and the Roadmap line; and every line that says 0.2 is not released, as the note from the second review of P-19 lists them)
 - templates/workdeck.yml (the step that runs `card plan`)
 - test/cases/02-plugin.sh
+- site/ (only the regions its build script generates, and only if the site exists: the version change makes them stale)
 
 ## Tests
 - test_plugin_manifest_and_card_agree_on_the_version
@@ -47,6 +48,7 @@ done: false
 Has the maintainer read the trial record in docs/evidence.md and decided to release 0.2.0? And does the main branch hold a reachable command or skill of an unfinished 0.3 feature (design section 22, decision 1)? This card goes on only after a yes to the first and a no to the second.
 
 ## Notes
+- 2026-10-11, from docs/development/plan-0.2.0.md: this card also waits for M-01 to M-05. The tag is pushed only after this card's pull request merges, and M-01's workflow then builds the release; follow docs/releasing.md, and watch that first run. `scripts/release-check.sh 0.2.0` must pass before handoff. If `site/` exists, run its build script so that its generated regions name 0.2.0; the wording "not yet released" on the site is the site's launch card's to remove, not this card's.
 - Merging this card is the release for plugin users: they receive the main branch as it is at that commit, whatever the tag is on. Read the main branch, not only this diff, before handoff.
 - Between this merge and the tag, the README's download line and a workflow written by init name a tag that does not exist. Make the tag right after the merge.
 - The claim is read again through Context7 (`/websites/code_claude`), pages `plugins/host-marketplace` and `plugins/loading`.
