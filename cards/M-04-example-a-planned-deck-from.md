@@ -3,7 +3,7 @@ id: M-04
 title: Example: a planned deck, from specification to card
 size: S
 depends:
-done: false
+done: true
 ---
 
 ## Read
@@ -17,7 +17,18 @@ done: false
 - cards/REVIEW.md
 
 ## Touch
-- examples/planned-deck/ (new: README.md, workdeck.conf, specs/, cards/, cards/plan/, log/, src/, tests/, test.sh)
+- examples/planned-deck/README.md (new)
+- examples/planned-deck/workdeck.conf (new)
+- examples/planned-deck/test.sh (new)
+- examples/planned-deck/specs/notes.md (new)
+- examples/planned-deck/cards/plan/note.md (new)
+- examples/planned-deck/cards/NOTE-01-store-a-note.md (new)
+- examples/planned-deck/cards/NOTE-03-list-and-filter-notes.md (new)
+- examples/planned-deck/cards/NOTE-03b-filter-the-list-by-a-word.md (new)
+- examples/planned-deck/log/2026-10-11-NOTE-01-1.md (new)
+- examples/planned-deck/log/2026-10-11-NOTE-03-1.md (new)
+- examples/planned-deck/src/notes.sh (new)
+- examples/planned-deck/tests/notes.sh (new)
 - examples/hello-deck/README.md (one line that points at the planned example)
 - README.md (the line that names the examples)
 - test/cases/02-plugin.sh

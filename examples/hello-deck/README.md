@@ -1,6 +1,6 @@
 # hello-deck: a two-card example
 
-A tiny project set up the way `/workdeck:init` leaves one, with two cards. The first is done and has a session log; the second is ready. Copy the directory somewhere, run `git init` and commit, and every command below gives the output shown.
+A tiny project set up the way `/workdeck:init` leaves one, with two cards. The first is done and has a session log; the second is ready. Copy the directory somewhere, run `git init` and commit, and every command below gives the output shown. [`planned-deck`](../planned-deck/) is the next example: a deck cut from a specification by the planner.
 
 ```
 workdeck.conf                        check = sh test.sh, base = main

@@ -497,6 +497,130 @@ test_example_deck_lints_and_lists() {
   assert_contains "$(cat README.md)" "$OUT"
 }
 
+# M-04. planned_deck: a copy of examples/planned-deck as a repository of its
+# own, with one commit on main; cd into it. card finds the root with git, so
+# the example cannot be run where it lies.
+planned_deck() {
+  mkdir "$T/pd"
+  cp -R "$ROOT/examples/planned-deck/." "$T/pd/" || fail 'no planned-deck example'
+  cd "$T/pd" || exit 1
+  git init -q . && git symbolic-ref HEAD refs/heads/main && git add -A && git commit -q -m example
+}
+
+# pcard <args...>: this card, run once. Not card(): test/cases/70-compat.sh
+# runs this file with a card() that compares list, next and status with
+# 0.1.3, which is right only for a deck with no outline.
+pcard() { run "$BASH" "$CARD" "$@"; }
+
+test_planned_deck_example_passes_lint_and_plan() {
+  planned_deck
+  pcard lint; assert_rc 0
+  pcard plan; assert_rc 0
+  assert_not_contains "$OUT" 'differs'
+  # The card that is not started holds against the tree as it is.
+  pcard plan check NOTE-03b; assert_rc 0
+  # The example's own check command passes, and is the one workdeck.conf names.
+  pcard conf check; assert_eq 'sh test.sh' "$OUT" 'check command'
+  run sh test.sh; assert_rc 0
+  [ "$(cat src/*.sh | wc -l)" -le 12 ] || fail 'the code of the example is not small'
+  # card 0.1.3 does not read outlines, and its lint passes on this deck.
+  need_old_card || return 0
+  run "$BASH" "$OLD_CARD" lint
+  assert_rc 0
+}
+
+test_planned_deck_example_shows_a_row_a_planned_card_and_a_remainder() {
+  local n line
+  planned_deck
+  # The specification: about forty lines, five or six headings at its level.
+  n=$(grep -c '' specs/notes.md)
+  { [ "$n" -ge 30 ] && [ "$n" -le 50 ]; } || fail "the specification has $n lines, not about forty"
+  n=$(grep -c '^## ' specs/notes.md)
+  { [ "$n" -ge 5 ] && [ "$n" -le 6 ]; } || fail "the specification has $n headings"
+  # The outline: four to six rows and a Not planned list.
+  n=$(grep -c '^## NOTE-[0-9]' cards/plan/note.md)
+  { [ "$n" -ge 4 ] && [ "$n" -le 6 ]; } || fail "the outline has $n rows"
+  [ "$(awk '/^## / { on = ($0 == "## Not planned") } on && /^- /' cards/plan/note.md | grep -c .)" -ge 1 ] || fail 'the outline lists nothing as not planned'
+  # One row done as a planned card with its log; one planned card split,
+  # with its remainder; two rows with no card file, one ready, one waiting.
+  pcard list
+  assert_eq 'done     NOTE-01      XS  Store a note
+ready    NOTE-02      XS  Remove a note [row]
+done     NOTE-03      S   List and filter notes
+ready    NOTE-03b     XS  Filter the list by a word
+waiting  NOTE-04      XS  Export the notes as markdown [row]' "$OUT" 'card list'
+  ls log/*-NOTE-01-1.md >/dev/null 2>&1 || fail 'the done planned card has no session log'
+  grep -q '^outcome: split$' log/*-NOTE-03-1.md || fail 'the split card has no log that says split'
+  grep -q '^depends: NOTE-03$' cards/NOTE-03b-*.md || fail 'the remainder does not depend on the card it was split from'
+  # NOTE-04 depends on NOTE-03, which is done: it waits for the remainder.
+  grep -A3 '^## NOTE-04 ' cards/plan/note.md | grep -q '^- depends: NOTE-03$' || fail 'NOTE-04 does not depend on NOTE-03'
+  pcard next
+  assert_contains "$OUT" 'NOTE-02'
+  assert_contains "$OUT" '[row]'
+  pcard show NOTE-02
+  assert_eq 'row: no card file yet' "$(printf '%s\n' "$OUT" | head -1)" 'first line of card show for a row'
+  # The planned cards begin as `card plan start` writes them: the same front
+  # matter but for done, the same first Read item, and the row's first line
+  # first under Acceptance.
+  for n in NOTE-01 NOTE-03; do
+    line=$(awk '/^## Read$/ { getline; print; exit }' cards/"$n"-*.md)
+    cp cards/"$n"-*.md "$T/written.md"
+    # Gone from the base branch too, or the id still has a card file.
+    git rm -q cards/"$n"-*.md && git commit -q -m "without $n"
+    pcard plan start "$n"; assert_rc 0
+    assert_eq "$(awk '/^## Read$/ { getline; print; exit }' "$OUT")" "$line" "first Read item of $n"
+    assert_contains "$line" "- specs/notes.md (row $n: "
+    assert_eq "$(sed -n '2,5p' "$OUT")" "$(sed -n '2,5p' "$T/written.md")" "front matter of $n"
+    assert_eq "$(awk '/^## Acceptance$/ { getline; print; exit }' "$OUT")" "$(awk '/^## Acceptance$/ { getline; print; exit }' "$T/written.md")" "first Acceptance item of $n"
+  done
+}
+
+# Every block of command output in the example's README is what the command
+# prints in a copy of the example.
+test_planned_deck_readme_output_is_real() {
+  local readme c n=0 b=0 first
+  planned_deck
+  readme=$(cat README.md)
+  # Every fenced block that starts with "$ card" is rebuilt from what the
+  # commands print, in the README's order, and must be the same to the byte:
+  # the command, its stdout, its stderr as a terminal shows it, then for a
+  # failure a blank line and "(exit N)", and a blank line between commands.
+  awk -v d="$T" '
+    /^```/ { if (on) close(f); else { k++; f = d "/block." k; printf "" > f } on = !on; next }
+    on { print > f }' README.md
+  for c in "$T"/block.*; do
+    [ -s "$c" ] && head -1 "$c" | grep -q '^\$ card ' && b=$((b + 1)) && printf '%s\n' "${c##*.}"
+  done | sort -n > "$T/blocks"
+  while IFS= read -r b; do
+    : > "$T/expected"
+    first=1
+    grep '^\$ card ' "$T/block.$b" > "$T/commands"
+    while IFS= read -r c; do
+      [ "$first" -eq 1 ] || echo >> "$T/expected"
+      first=0
+      # shellcheck disable=SC2086
+      pcard ${c#\$ card }
+      printf '%s\n' "$c" >> "$T/expected"
+      [ -z "$OUT" ] || printf '%s\n' "$OUT" >> "$T/expected"
+      [ -z "$ERR" ] || printf '%s\n' "$ERR" >> "$T/expected"
+      [ "$RC" -eq 0 ] || printf '\n(exit %s)\n' "$RC" >> "$T/expected"
+      n=$((n + 1))
+    done < "$T/commands"
+    cmp -s "$T/expected" "$T/block.$b" || fail "a block of the README is not what the commands print:
+$(diff "$T/expected" "$T/block.$b")"
+  done < "$T/blocks"
+  [ "$n" -ge 6 ] || fail "the README shows the output of $n commands"
+  for c in 'card list' 'card next' 'card show NOTE-02' 'card plan' 'card plan check NOTE-03b' 'card plan start NOTE-02' 'card plan check NOTE-01'; do
+    grep -q -x -F "\$ $c" README.md || fail "the README does not show [$c]"
+  done
+  # What files alone cannot show is said, and not faked.
+  for c in 'plan reviewer' 'no branches of its own' 'to come' 'written by hand' 'unknown'; do
+    assert_contains "$readme" "$c"
+  done
+  grep -q -F '](../planned-deck/)' "$ROOT/examples/hello-deck/README.md" || fail 'hello-deck does not point at the planned example'
+  grep -q -F '](examples/planned-deck/)' "$ROOT/README.md" || fail 'README does not name the planned example'
+}
+
 test_docs_have_one_design_file_and_a_development_folder() {
   local f
   for f in docs/design.md docs/evidence.md docs/development/README.md docs/development/plan-0.1.md docs/development/findings.md docs/development/later.md; do

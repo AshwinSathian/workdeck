@@ -167,7 +167,7 @@ done: false
 
 The size is a budget for context growth. `card new` gives a card size S unless you say otherwise, and the quick lane writes XS cards. After a few cards, `card stats` shows what your sessions used at each size.
 
-A full example with two cards, a session log and real output is in [`examples/hello-deck/`](examples/hello-deck/).
+A full example with two cards, a session log and real output is in [`examples/hello-deck/`](examples/hello-deck/). [`examples/planned-deck/`](examples/planned-deck/) shows a deck cut from a specification: the outline, a card written from a row, a card that was split, and rows not yet started.
 
 ## Skills
 
