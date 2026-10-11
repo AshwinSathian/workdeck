@@ -1,6 +1,6 @@
 ---
 id: T-01b
-title: Design for 0.3, as a draft
+title: Design and review for 0.3
 size: M
 depends: T-01
 done: true
@@ -23,19 +23,24 @@ done: true
 - skills/next-card/SKILL.md (step 4: the base branch is checked out, which a linked worktree refuses)
 
 ## Touch
+- docs/development/scope-0.3.md (amended from the review of the design)
 - docs/design-0.3.md (new)
+- docs/development/review-0.3.md (the passes on the design, after the first)
 - docs/development/README.md (one row per new record)
 - test/cases/02-plugin.sh (one case; the tests gate needs a named test)
 
 ## Tests
-- test_design_for_0_3_is_listed_and_numbered
+- test_development_records_for_0_3_are_listed_and_exist
 
 ## Acceptance
 - The scope note was on the base branch before the design was written. Its six decisions were taken by the session that wrote it, on the maintainer's instruction, and the maintainer approved it by merging pull request 40.
-- The design is a draft and its status line says so. Its section 22 lists each place where it leaves the scope note, for the review and the maintainer.
+- The design follows each of the six decisions, or the review record says which one it changed. It changed one, the order for a row in decision 2, and the scope note is amended with it; the maintainer's agreement is the merge.
 - The design is its own file, docs/design-0.3.md, numbered like docs/design.md. It adds to docs/design.md and docs/design-0.2.md and says so.
 - Every claim about Claude Code or git behavior cites the documentation page it came from, and anything not checked is marked unverified.
-- The design is one markdown file that is committed.
+- An agent that did not write the design reviewed the scope and the design against the code, and was told to assume both are wrong. The review record lists each finding with its evidence, and which the maintainer accepted.
+- The scope and the design agree with each other and with the review record: no rule is in one and missing from the other.
+- The maintainer did not approve the three outputs one by one. After the draft of the design the maintainer told the session to have pull request 41 attacked by an agent that did not write it, to take every open decision and to carry them out. Merging that pull request is the approval of the design as decided, of the scope note as amended and of the review record.
+- The design is one markdown file that is committed, so `/workdeck:plan` can take it as written.
 - No file under bin/, hooks/, skills/, agents/, templates/ or reference/ changed.
 
 ## Out of scope
@@ -45,7 +50,7 @@ done: true
 - Shaping the design's sections to suit the planner. It is written for people; the bias of an author who knows it will be planned is recorded in docs/development/scope-0.2.md, risk 9.
 
 ## Notes
-- Split on 2026-10-11 after the first of this card's three outputs, the draft of the design. The maintainer has not approved the draft. T-01c holds the review, the review record, the design as amended and the approvals, and the test for all three records; P-22 depends on T-01c now. The notes below are as they were written for the whole card.
+- 2026-10-11: the card was split at handoff after the draft of the design, into this card and a T-01c, and pull request 41 was opened for the draft. The maintainer then delegated the decisions (see `Acceptance`), the review and the amendments were made in the same pull request, and the split was undone: T-01c is gone and P-22 depends on this card again. The record is the second and third passes of docs/development/review-0.3.md.
 - The remainder of T-01, split on 2026-10-11 after the scope note. T-01's test, test_scope_note_for_0_3_is_listed_and_exists, stays; this card adds the one for all three records.
 - 0.2 serves the plugin to users from the main branch when its version changes (docs/design-0.2.md, section 19, row 18). The 0.3 design has to say how a half-built team feature stays unreachable on that branch.
 - If the budget warning appears, hand off with `/workdeck:handoff split`: the design before its review is the natural part. P-22 does not wait for a remainder, so in that handoff change P-22's `depends` to the card that ends with docs/design-0.3.md amended from the review.

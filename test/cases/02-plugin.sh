@@ -529,10 +529,9 @@ test_scope_note_for_0_3_is_listed_and_exists() {
   grep -q '^### The six decisions$' "$d/review-0.3.md" || fail 'the review record has no part for the six decisions'
 }
 
-# The design of 0.3, as a draft. Like the test above, this holds the form of
-# the design and not its sense. T-01c adds the test for the passes of the
-# review record on it and for its approval.
-test_design_for_0_3_is_listed_and_numbered() {
+# The three records of 0.3. Like the test above, this holds the form of the
+# design and of the record, and not their sense.
+test_development_records_for_0_3_are_listed_and_exist() {
   local d="$ROOT/docs/development" des="$ROOT/docs/design-0.3.md" f n
   for f in scope-0.3.md review-0.3.md ../design-0.3.md; do
     [ -s "$d/$f" ] || fail "docs/development/$f is missing"
@@ -546,7 +545,18 @@ test_design_for_0_3_is_listed_and_numbered() {
   # with none left out and at least as many as a design needs.
   n=$(awk '/^## / && $2 != ++n "." { bad = 1 } END { print (bad ? "bad" : n + 0) }' "$des")
   case $n in bad | ?) fail "the design's sections are not numbered in order from 1 (got '$n')" ;; esac
-  grep -Eq '^Status: (draft|approved)[ ,.]' "$des" || fail 'the status line of the design says neither draft nor approved'
+  grep -q '^Status: decided on ' "$des" || fail 'the status line of the design does not say it is decided'
+  # Its open points are decided: eight rows, numbered in order, each with what
+  # the draft had and what was decided, here and in the review record.
+  for f in "$des" "$d/review-0.3.md"; do
+    assert_eq '1 2 3 4 5 6 7 8' "$(awk -F ' *[|] *' '
+      /^#/ { on = ($0 ~ /^##+ (22\. Decisions on the open points|The eight decisions)$/); next }
+      on && $2 ~ /^[0-9]+\. / && $3 != "" && $4 != "" { n = n (n == "" ? "" : " ") ($2 + 0) }
+      END { print n }' "$f")" "the eight decisions in ${f##*/}"
+  done
+  # The record has the passes on the design, and no file says it is not written.
+  ! grep -n 'The design is not written yet\|is not started' "$d/review-0.3.md" "$d/scope-0.3.md" || fail 'a record still says the design is not written'
+  assert_eq 2 "$(grep -c '^## [A-Z][a-z]* pass, 2026-[0-9-]*: the \(design\|decisions\)' "$d/review-0.3.md")" 'passes of the review record on the design'
   # Every claim about Claude Code or git has a page and says how it is known:
   # each line of the table after its two heading lines is a numbered row, in
   # order, whose status starts with one of three words, and a claim with no
