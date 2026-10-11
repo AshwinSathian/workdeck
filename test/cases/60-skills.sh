@@ -490,6 +490,29 @@ test_plan_skill_runs_the_push_as_its_own_command() {
   assert_contains "$(plan_step 9)" 'Otherwise run `git push -u origin <branch>`. Run the push as its own command, with nothing chained before or after it and nothing after the branch name.'
 }
 
+test_plan_skill_gives_the_reviewer_only_the_outline_and_the_base_branch() {
+  local s
+  s=$(plan_step 7)
+  # Both plan runs of P-21 gave the second launch a summary of the first, and
+  # one gave the first launch the session's own choices. One string, so that a
+  # clause put between two of these sentences fails.
+  assert_contains "$s" 'wait for it to finish. Those two are the whole prompt, on the first launch and on the second, and on each launch after an edit in step 8: no summary of earlier findings, of what was changed, of what you chose while writing, or of what the user decided. A decision of the user goes into the outline, as a `does` or a `not` line, so that the next run reads it there and does not raise the question again. Fix every `must-fix` finding and run step 6 again. A finding that asks for what the user has decided against, or that objects to the line that records the decision, is not fixed: keep it, with the user'"'"'s decision as what was done about it, and show it in step 8. A choice you made is not a decision of the user. If a fix changed the outline'
+}
+
+test_plan_skill_lists_each_finding_of_both_runs_once() {
+  local s
+  s=$(plan_step 9)
+  assert_contains "$s" 'what was done about it. Each finding of each run is one line, as the reviewer gave it, with its severity and then what was done. None is merged with another, split or left out;'
+  assert_eq 'Keep every finding of both runs as the reviewer gave it, with what was done about it.' "$(plan_step 7 | grep -o 'Keep every finding.*')" 'the last sentence of step 7'
+}
+
+test_plan_reviewer_does_not_hash_the_specification() {
+  local f="$ROOT/agents/plan-reviewer.md"
+  # In step 1, between the two sentences on reading: not in another step.
+  assert_contains "$(grep '^1\. ' "$f")" 'whole. `card plan` has compared the outline'"'"'s `spec_blob` with the specification: do not run `git hash-object`. Read code only'
+  assert_eq 1 "$(grep -o -F 'hash-object' "$f" | grep -c .)" 'times git hash-object is named'
+}
+
 test_plan_skill_never_reuses_the_id_of_a_removed_row() {
   local s
   s=$(plan_step 5)

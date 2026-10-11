@@ -3,7 +3,7 @@ id: F-02
 title: Plan skill: what the reviewer is launched with, and every finding in the body
 size: XS
 depends:
-done: false
+done: true
 ---
 
 ## Read
@@ -16,6 +16,8 @@ done: false
 - skills/plan/SKILL.md
 - agents/plan-reviewer.md
 - test/cases/60-skills.sh
+- docs/development/review-0.2.md (the record of the two reviews of this card, as every card of 0.2 has one)
+- docs/development/later.md (three lines from the second review, for what this card leaves)
 
 ## Tests
 - test_plan_skill_gives_the_reviewer_only_the_outline_and_the_base_branch
