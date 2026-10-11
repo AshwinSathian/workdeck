@@ -529,6 +529,39 @@ test_scope_note_for_0_3_is_listed_and_exists() {
   grep -q '^### The six decisions$' "$d/review-0.3.md" || fail 'the review record has no part for the six decisions'
 }
 
+# The design of 0.3, as a draft. Like the test above, this holds the form of
+# the design and not its sense. T-01c adds the test for the passes of the
+# review record on it and for its approval.
+test_design_for_0_3_is_listed_and_numbered() {
+  local d="$ROOT/docs/development" des="$ROOT/docs/design-0.3.md" f n
+  for f in scope-0.3.md review-0.3.md ../design-0.3.md; do
+    [ -s "$d/$f" ] || fail "docs/development/$f is missing"
+    grep -qF "| [\`$f\`]($f) |" "$d/README.md" || fail "docs/development/README.md has no row for $f"
+  done
+  # The design adds to the two before it and follows the scope note.
+  for f in '(design.md)' '(design-0.2.md)' '(development/scope-0.3.md)'; do
+    grep -qF "$f" "$des" || fail "the design does not link $f"
+  done
+  # Numbered like docs/design.md: second-level headings 1, 2, 3 and so on,
+  # with none left out and at least as many as a design needs.
+  n=$(awk '/^## / && $2 != ++n "." { bad = 1 } END { print (bad ? "bad" : n + 0) }' "$des")
+  case $n in bad | ?) fail "the design's sections are not numbered in order from 1 (got '$n')" ;; esac
+  grep -Eq '^Status: (draft|approved)[ ,.]' "$des" || fail 'the status line of the design says neither draft nor approved'
+  # Every claim about Claude Code or git has a page and says how it is known:
+  # each line of the table after its two heading lines is a numbered row, in
+  # order, whose status starts with one of three words, and a claim with no
+  # page is unverified.
+  n=$(awk -F ' *[|] *' '
+    /^## / { on = ($0 ~ /behavior this design relies on$/); next }
+    on && /^[|]/ && ++line > 2 {
+      rows++
+      if ($2 != rows || $3 == "" || $4 == "" || $5 !~ /^(read|run|unverified)([ .:,]|$)/) bad++
+      else if ($4 == "none" && $5 !~ /^unverified/) bad++
+    }
+    END { print rows + 0, bad + 0 }' "$des")
+  case $n in ? | ?' '*) fail "the behavior table of the design has fewer than ten rows: $n" ;; *' 0') ;; *) fail "rows of the behavior table out of order, or with no page or no status: $n" ;; esac
+}
+
 # The spike of design-0.2 section 21, item 1. The record is finished when no
 # part of it still says it was not run.
 test_spike_record_for_0_2_is_listed_and_answers_its_questions() {
