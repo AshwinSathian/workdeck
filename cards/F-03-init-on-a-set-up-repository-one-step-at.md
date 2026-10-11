@@ -3,7 +3,7 @@ id: F-03
 title: Init on a set-up repository: one step at a time, the protocol section's end
 size: S
 depends:
-done: false
+done: true
 ---
 
 ## Read

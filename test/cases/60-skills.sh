@@ -573,7 +573,7 @@ test_init_continues_when_workdeck_conf_exists() {
   # The rest of the file is held whole, from its first line: of 50 mutations of
   # the skill, 41 passed the fragments in the tests below (review 0.2,
   # twentieth pass).
-  assert_eq '1201528225 7362' "$( (awk '/^2\. / { exit } 1' "$INIT_SKILL"; init_step 4; init_step 5; init_step 8; init_step 9; init_step 10; init_again_step) | cksum)" 'the file without steps 2, 3, 6 and 7'
+  assert_eq '3161463243 7952' "$( (awk '/^2\. / { exit } 1' "$INIT_SKILL"; init_step 4; init_step 5; init_step 8; init_step 9; init_step 10; init_again_step) | cksum)" 'the file without steps 2, 3, 6 and 7'
 }
 
 test_init_asks_before_each_step_and_overwrites_nothing() {
@@ -635,6 +635,40 @@ test_init_replaces_a_protocol_section_that_differs_from_the_template() {
   assert_contains "$s" 'with the directories replaced as step 4 says'
   # The section names the default directories (review 0.2, nineteenth pass).
   assert_contains "$(init_step 4)" 'Where `card conf cards_dir` prints something other than `cards`, write that directory in place of `cards` in `cards/` and `cards/plan/`'
+}
+
+# Hand run of 2026-10-11 (docs/evidence.md): the session asked the four steps
+# as one question, took a `# ` line inside a code block for the section's end,
+# offered "add the two bullets only" first, and left `/workdeck:plan` out of
+# its closing message.
+test_init_asks_the_four_steps_one_after_another() {
+  local s
+  s=$(init_again_step)
+  assert_contains "$s" 'Ask one step and wait for its answer before you look at the next'
+  assert_contains "$s" 'Do not put the four steps, or any two of them, into one question'
+  # A step that asks nothing has no answer to wait for.
+  assert_contains "$s" 'it has asked nothing, so go on to the next step without waiting'
+}
+
+test_init_does_not_end_the_protocol_section_inside_a_code_block() {
+  assert_contains "$(init_again_step 4)" 'A line that starts with `# ` or `## ` inside a fenced code block is part of that block and does not end the section'
+}
+
+test_init_offers_only_a_yes_or_a_no_for_the_protocol_section() {
+  local s
+  s=$(init_again_step 4)
+  assert_contains "$s" 'The question has two answers: a yes replaces the whole section, with any change the project made to it, and a no leaves it as it is'
+  assert_contains "$s" 'Offer no partial change, such as adding only the lines the section lacks'
+}
+
+test_init_gives_every_next_step_of_step_10_on_a_set_up_repository() {
+  local s p
+  s=$(init_again_step | sed -n '/^Then do step 10/p')
+  assert_contains "$s" 'Give every next step it names'
+  for p in '`/workdeck:quick`' '`card new`' '`/workdeck:plan <spec path>`'; do
+    assert_contains "$s" "$p"
+  done
+  assert_contains "$s" 'also when none of the four steps wrote anything'
 }
 
 test_init_no_longer_says_that_cards_are_not_written_from_a_specification() {
