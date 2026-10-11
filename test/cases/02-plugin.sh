@@ -515,6 +515,12 @@ test_development_records_for_0_2_are_listed_and_exist() {
   done
 }
 
+test_scope_note_for_0_3_is_listed_and_exists() {
+  local d="$ROOT/docs/development"
+  [ -s "$d/scope-0.3.md" ] || fail 'docs/development/scope-0.3.md is missing'
+  grep -q '^| \[`scope-0.3.md`\](scope-0.3.md) |' "$d/README.md" || fail 'docs/development/README.md has no row for scope-0.3.md'
+}
+
 # The spike of design-0.2 section 21, item 1. The record is finished when no
 # part of it still says it was not run.
 test_spike_record_for_0_2_is_listed_and_answers_its_questions() {
