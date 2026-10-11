@@ -1047,3 +1047,71 @@ A third agent then attacked these amendments in the working tree, on a copy. It 
 - `later.md`: the line on deletes said no hand run showed a fault, and three sessions chained `rm -f` with `gh pr create`. Two lines are new: the body of a resumed plan pull request, which must now be copied through the Write tool, with the body file that handoff leaves in the tree where `gh` is missing; and that the figure is not whole, so that the fault P-23 lists as open has a place.
 
 Left from it: the three tests have 3, 6 and 3 assertions and deleting one passes, where the twenty-seventh pass made each test one assertion; here each assertion holds a different file or count, and one string cannot. The place of the paragraph in `docs/reference.md` is held by the first 22 characters of the paragraph before it. A sentence in the two steps that write a body, in place of the body in the list, was weighed again and not taken. Nobody reviewed these last fixes, and no session has been seen to follow any of the sentences. The amended tree had not been through CI when this was written.
+
+## Twenty-ninth pass, 2026-10-11: the reviews of F-05
+
+F-05 replaced two bullets of the README's Known limits with what the hand runs on `docs/evidence.md` showed: the one that said a push with a redirect was not run, and the one on commands that are not pre-approved. It added `test_readme_known_limits_say_what_the_hand_runs_showed`. Three agents that did not write it reviewed it: the handoff reviewer before the pull request was opened; a second, told to break it and to attack the decision proposed for each open item, after; and a third, told to attack the fixes in the working tree. None had a must-fix. All three were general-purpose agents: the plugin was not loaded in the session, which followed the skill files by hand. The maintainer told the session to take every decision the pull request left open.
+
+The handoff review:
+
+| Found | Decided | Why |
+|---|---|---|
+| "Every command that wrote a file from the shell" waited: the page has a `cat >` of a body in a command that was denied, and a command that began with `python3` and is not in a list of waits | "commands that wrote a file from the shell" | Fixed before the pull request. |
+| "Claude asks before each" stands beside a `git checkout -b` that did not wait | Left at the handoff; see the second review | |
+| "One of which ran in auto mode" read as if the other four were under the entries throughout; the first plan session was in auto mode from the `python3` command to step 8 | "and one of which was in auto mode for part of its run" | A nit of the review, fixed before the pull request. The body and the log count the clause among what is beyond the card's words, not among the findings. |
+| The test for the last `Acceptance` item compares the first two words of each allow entry | Left at the handoff; see the second review | |
+| That test passes with no comparison if the template yields no allow entry | Left at the handoff; see the second review | |
+
+The second review:
+
+| Found | Decided | Why |
+|---|---|---|
+| "Claude asks before each, so an unattended next-card or handoff stops at the first one." Across the five sessions each of the four was seen to wait only inside a chained command. The one time one of them was a command of its own, `git checkout -b plan/2610110136`, it did not wait. The plan skill runs all four, and the bullet no longer named a plan session | "Expect Claude to ask before each, so an unattended plan, next-card or handoff stops at the first one it asks about", and a clause that says what was seen and that why is not known | A nit at the handoff, a should-fix here: the bullet stated a rule its own linked page does not bear out. The four names stand as the card asks. |
+| "The skills now tell a session to write files with the Write and Edit tools" stands after the list of what waited and reads as the cure. In the two card sessions the Write of the card, of the tests and of the code, and the Edit of the card and of the log, waited too | "which show the change alone; in the two card sessions those calls waited too" | The skills' reason is that the tools show the change alone, not that no prompt comes. |
+| The loop of the test passes with no comparison: with the template's entries on one line the awk yields one, and with `"deny"` before `"allow"` none | The loop counts, and the test fails under 10 entries; the template yields 15 | "Not empty" would pass the one-line case. |
+| An allow entry in another spelling, `Bash(git add:*)` or `Bash(git add*)`, gave the key `git add:*` or `git add*`, and a bullet that still named `git add` passed | The key loses a trailing `*` or `:*` | |
+| `assert_not_contains "$s" '- Not run:'` covers the whole section, and "Not run:" is the house wording for such a bullet | The assertion holds `Not run: whether the deny rules` | |
+| "Written alone, ran": the page does not say whether that push waited, and in a bullet on permission entries "ran" reads as pre-approved | "Whether it waited first is not recorded." | |
+| "The skills now run the push as its own command": the skills say to, and no session has been seen to follow the sentence | "The skills now say to run the push" | The card's `Acceptance` has the shorter wording; the bullet on commands already said "tell a session to". |
+| The test asked for a link to `docs/evidence.md` with no anchor | It holds `](docs/evidence.md` | |
+| The test holds strings and not their sense: of 20 false rewordings of the two bullets 17 passed the test as pushed, and 7 of 11 true ones failed, `gh pr edit`, `git branch -a` and a path under `cards/` in a code span among them | Left, with the comment in the test saying which spans fail, a line in `later.md` and a note in P-23 | P-23 may correct this bullet, so the whole line is not pinned. |
+
+Decisions taken on what the pull request left open:
+
+1. "Claude asks before each" beside a `git checkout -b` that did not wait. Reworded as in the table. The four names stay.
+2. The test compares a prefix of each allow entry and fails a true bullet that names `gh pr edit` or `git branch -a`. Left; the comment in the test now names the spans that fail. An exact match of each pattern is more code than one bullet is worth.
+3. The test passed with no comparison. A count, as in the table, and the other spelling of an entry. The third review found that two entries on one line still passed with the count at 10 or more, and the template is now split at commas before the awk reads it.
+4. Two assertions removed from `test_readme_names_the_plan_skill_and_warns_about_an_untrusted_specification`. Stands: both strings are gone from the README, and the new test holds the bullets.
+5. Beyond the card's words: the push that was denied once, the two clauses on auto mode, and the sentence on the Write and Edit tools. The first two stand. The third has the clause that those calls waited too.
+6. The list `git ls-files`, `rm` and `gh pr edit`, dropped from the second bullet. Stays dropped: `gh pr edit` was not run, `git ls-files` ran at once in one plan run and waited in a chain in the other, and `rm` was only ever inside a chain. The sentence that Claude Code may allow a command that only reads went with it. The runs do show it: `git remote -v`, `ls`, `cat` and, in one plan run, `git ls-files` ran at once with no entry. The evidence page draws no rule from that, and the bullet does not either.
+7. The push in the first bullet is `git push -u origin card/<name> 2>&1 | tail -3`, where the old bullet had `plan/<name>`. Stands: "written alone" is true of the card session's push only, and both plan pushes ended a chain.
+8. The changelog. No line: the unreleased part describes the skills and the template, and its lines on the push and on the Write and Edit tools agree with the bullets.
+9. `docs/evidence.md`, "None is fixed here. Cards F-01 to F-04 hold them, and F-05 the two bullets". Unchanged: it says who holds what, and stays true after the merge.
+10. The measured fields, all `unknown`. Left: `card log-new` found no transcript, and the figures cannot be rebuilt.
+11. The reviews by general-purpose agents and not `workdeck:reviewer`. Accepted as the log and the body say.
+12. Nobody has seen a session act on these bullets. Does not hold the merge: people read them, and what is not known is in them as not known.
+13. The card's `Touch` gains this file. `later.md` is in `touch_ignore`, and `card touched` does not count the cards directory, where P-23 has a note.
+14. The Write and Edit tools waited in the card sessions. In the bullet, as in the table.
+15. None of the four was seen to wait as a command of its own. In the bullet, as in the table.
+16. P-23 may correct the second bullet, if the prompts it writes down by hand differ from it, and the test holds "no prompt was recorded as such", "five hand-run sessions", "inferred from a pasted terminal", "returned without a wait" and "those calls waited too", some of which are false the day it does. P-23 has the test file in its `Touch` and now a note.
+17. The assertion on "Not run:" and the one on the link. Narrowed and widened, as in the table.
+18. The test holds strings and not their sense. Left. A line in `later.md`.
+19. Whether the push written alone waited. One sentence in the bullet, as in the table.
+20. The body of the pull request, which said "the skills now run the push" and listed three nits as left open that the fixes close. Handoff does not write a body again; the session did, with `gh pr edit`, after the fixes were pushed.
+
+Held when run or read by the second reviewer: `test/run.sh 02-plugin`, `card lint`, `card touched F-05` and `card tests F-05`; `shellcheck` on the test file; CI on the pull request, on macOS and Ubuntu; each of the card's four `Acceptance` items and three `Out of scope` items; the rules of `cards/REVIEW.md` on awk and shell; and that the change makes nothing false in the FAQ, `docs/reference.md`, the changelog, line 227 of the README or P-23. It made 40 mutations on a copy: 20 false bullets, 11 true ones and 9 changes to the template, of which 4 passed with a stale or empty comparison.
+
+A third agent then attacked these fixes in the working tree, on a copy. It had no must-fix finding, found no clause of the two bullets false against `docs/evidence.md`, and overturned no decision. It asked that three be amended, 3, 6 and 16. On the amended test 16 of its 18 false rewordings of the bullets passed and 4 of 7 true ones failed; of 14 changes to the template 4 passed that should fail and one failed that should pass. What it asked for, and what was done:
+
+- "One `git checkout -b`, a command of its own, returned without a wait" dropped the condition the page gives: it was sent in one message with a Read and `card list`, and two commands sent in one message cannot be told apart. The bullet now says "a command of its own sent in one message with two other calls".
+- The count did not close every case: with two entries on one line the awk kept the last, and `"Bash(git add *)", "Bash(card *)",` passed with the count at 15. The template is split at commas before the awk reads it.
+- The reason first given for decision 6, that nothing in the runs shows a reading command allowed with no entry, was false. Corrected above.
+- This pass said two agents and the session log three, before the third had reported; the handoff table had a row that neither the body nor the log gives as a finding, and one row for two nits; "P-23 is to correct" left out the condition in P-23's `Touch`, that the prompts written down differ from the bullet; and the figures 17 of 20 and 7 of 11 read as true of the test as it now stands. All corrected, here and in `later.md`.
+- The comment in the test named four of the prefixes that fail a code span. It names nine; the tenth, `date +%y%m%d%H%M`, is a whole command.
+- The session log said "the skills run the push". It says "say to run".
+
+Left from it: "in the two card sessions those calls waited too" is true of the two together and loose of each, the second having an Edit that waited and no Write. For `git pull` a wait may be the network; the last sentence of the bullet carries that. An allow entry of bare `Bash`, one with a variable set before the command, and `Bash(* add *)` pass the test with a bullet that names `git add`, and an `ask` block between `allow` and `deny` fails a true one. `](docs/evidence.md` accepts a longer path that starts so. A reworded "Not run:" bullet passes.
+
+Nobody reviewed these last fixes. The amended tree had not been through CI when this was written; CI passed on the pushed commit 37fdcde, on macOS and Ubuntu. Only BSD awk ran the amended test before the push.
+
+Not run: any Claude Code session.

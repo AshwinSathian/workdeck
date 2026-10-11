@@ -601,24 +601,34 @@ test_readme_names_the_plan_skill_and_warns_about_an_untrusted_specification() {
 
 # The two bullets that waited for the hand runs say what docs/evidence.md has.
 test_readme_known_limits_say_what_the_hand_runs_showed() {
-  local s b e
+  local s b e n=0
   s=$(readme_section 'Known limits')
-  assert_not_contains "$s" '- Not run:'
+  assert_not_contains "$s" 'Not run: whether the deny rules'
   assert_contains "$s" 'a redirect and a pipe after the branch name did not make a deny rule match'
-  assert_contains "$s" 'The skills now run the push as its own command'
+  assert_contains "$s" 'The skills now say to run the push as its own command'
   b=$(printf '%s\n' "$s" | grep '^- Some commands are not pre-approved: `git checkout`, `git pull`, `git add` and `git commit`\.') || fail 'Known limits has no bullet on the commands that are not pre-approved'
   assert_contains "$b" 'five hand-run sessions'
   assert_contains "$b" 'wrote a file from the shell'
   assert_contains "$b" 'several chained commands'
   assert_contains "$b" 'inferred from a pasted terminal and from waits in the transcripts'
   assert_contains "$b" 'no prompt was recorded as such'
-  assert_contains "$b" '](docs/evidence.md)'
+  assert_contains "$b" '](docs/evidence.md'
   assert_not_contains "$b" 'has not been recorded'
-  # No command the bullet names has a permission entry: the first two words of
-  # each allow entry, written as the start of a code span.
+  # What the runs do not bear out is said: one of the four did not wait, and
+  # the Write and Edit tools waited as well.
+  assert_contains "$b" 'returned without a wait'
+  assert_contains "$b" 'those calls waited too'
+  # No command the bullet names has a permission entry. This compares a prefix:
+  # the first two words of each allow entry against the start of each code span.
+  # A span that starts with any of them (`card`, `gh pr`, `git push`, `git branch`,
+  # `git status`, `git diff`, `git log`, `git show`, `git merge-base`) fails
+  # whether or not an entry matches it, a path under cards/ included. The
+  # template is split at commas, so two entries on one line are both read.
   while IFS= read -r e; do
+    n=$((n + 1))
     assert_not_contains "$b" "\`$e"
-  done < <(awk '/"deny"/ { exit } /"Bash\(/ { sub(/.*Bash\(/, ""); sub(/\).*/, ""); if ($1 != "<check>") print ($2 == "" || $2 == "*" ? $1 : $1 " " $2) }' "$ROOT/templates/settings-permissions.json")
+  done < <(awk '/"deny"/ { exit } /"Bash\(/ { sub(/.*Bash\(/, ""); sub(/\).*/, ""); if ($1 == "<check>") next; k = ($2 == "" || $2 == "*" ? $1 : $1 " " $2); sub(/:?\*$/, "", k); print k }' < <(tr ',' '\n' < "$ROOT/templates/settings-permissions.json"))
+  [ "$n" -ge 10 ] || fail "read $n allow entries from the permission template, expected 10 or more"
 }
 
 # Design 0.2, section 8, the rows for a 0.1 user, and the limits of section 11.3.
