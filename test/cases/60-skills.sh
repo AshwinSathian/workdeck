@@ -187,9 +187,10 @@ SENTENCES
   part=$(grep -n 'card as approved' "$f" | head -1 | cut -d: -f1)
   assert_eq "$((commit + 1))" "$part" 'line of the addition'
   # One addition: without that line the skill is what it was in 0.1, split mode
-  # included, but for the sentence of F-01 that the push is its own command.
+  # included, but for the sentence of F-01 that the push is its own command
+  # and the two of F-04, on the edit tools and on what the growth leaves out.
   assert_eq 1 "$(grep -c 'card as approved' "$f")" 'lines that name the approval commit'
-  assert_eq '2103718737 4358' "$(grep -v 'card as approved' "$f" | cksum)" 'handoff without the addition'
+  assert_eq '316930120 5361' "$(grep -v 'card as approved' "$f" | cksum)" 'handoff without the addition'
 }
 
 # Hand runs of 2026-10-11 (docs/evidence.md): a push that led a longer command
@@ -537,6 +538,58 @@ test_plan_skill_writes_no_card_and_no_code() {
   ! grep -n -E 'card (new|done|log-new|plan start|plan check)' "$f" || fail 'the plan skill names a command that writes a card'
   ! grep -n 'reference/implement.md' "$f" || fail 'the plan skill points at the implementation steps'
   assert_contains "$(plan_step 9)" 'the outline is the only file that changed. If anything else changed, revert it first'
+}
+
+# Hand runs of 2026-10-11 (docs/evidence.md): sessions wrote the outline, a
+# card, tests, code and the log with `python3`, `cat >>` and `sed -i`, each
+# chained with other commands, and each of those commands waited. Three of the
+# four sessions that opened a pull request wrote its body that way too.
+test_skills_say_to_write_files_with_the_edit_tools() {
+  local f
+  # shellcheck disable=SC2016
+  local rule='Write and change every file (a card, an outline, a test, code, the session log, the body of a pull request) with the Write and Edit tools, not with `python3`, `cat >>`, `sed -i` or another shell command: a shell command that writes a file comes as one prompt with whatever is chained to it, and the tools show the change alone. The exceptions are what a `card` or `git` command that a step names writes itself, and what a tool of the project generates, a lockfile or a snapshot among them: run the command. A change of your own to such a file is made with the tools.'
+  for f in "$ROOT/reference/implement.md" "$NEXT_SKILL" "$PLAN_SKILL" "$ROOT/skills/handoff/SKILL.md" "$ROOT/skills/quick/SKILL.md"; do
+    # The whole line: words before or after the sentence passed a test that
+    # looked for it within a line (review 0.2, twenty-eighth pass).
+    assert_eq 1 "$(grep -c -x -F -e "$rule" "$f")" "lines of $f that are the sentence on the edit tools"
+    # Once: a second wording would be a second rule.
+    assert_eq 1 "$(grep -c 'Write and Edit tools' "$f")" "lines of $f that name the edit tools"
+    # Above the first step, so that it holds for every step: a blank line follows, then step 1.
+    assert_eq '1. ' "$(grep -A 2 -x -F -e "$rule" "$f" | sed -n 3p | cut -c 1-3)" "start of the line that follows the sentence in $f"
+  done
+}
+
+# The same runs: the growth in the two session logs was 13,463 and 14,974, and
+# the transcripts gave 18,808 and 19,512.
+test_handoff_says_what_the_growth_figure_leaves_out() {
+  local f="$ROOT/skills/handoff/SKILL.md" s
+  s=$(awk '/^[0-9]+\. / { on = $1 == "6." } on' "$f")
+  assert_contains "$s" 'do not edit those. The growth is measured here, in step 6, when the command runs, and leaves out everything after it, step 7 above all: the figure in the log, and in the pull request body that takes it from the log, is short by what the rest of this step, the commit, the push and the pull request cost. Say so beside the figure in the body and in the report of step 8, unless the fields are `unknown` or the session compacted, and do not measure again. Fill in the four sections, 40 lines at most in total: `Done`, `Tests`, `Deviations` (anything that differs from the card), `Follow-ups`. Run `card lint`.'
+  # No step is reordered: the log is still written before the commit.
+  [ "$(grep -n 'card log-new <id>' "$f" | head -1 | cut -d: -f1)" -lt "$(grep -n 'git commit' "$f" | head -1 | cut -d: -f1)" ] || fail 'handoff commits before it writes the log'
+  # The figure is the log's: handoff measures once and never by `card tokens`.
+  assert_eq 1 "$(grep -o 'card log-new' "$f" | grep -c .)" 'times handoff names card log-new'
+  assert_eq 0 "$(grep -o 'card tokens' "$f" | grep -c .)" 'times handoff names card tokens'
+  # The paragraph whole, after the one on budgets.
+  # shellcheck disable=SC2016
+  local para='The measured fields of a session log are filled in by `card log-new`, which handoff runs before its commit. The growth in a log, and in what `card stats` prints from the logs, leaves out what handoff does after that: the rest of the log, the commit, the push and the pull request, about 5,000 tokens in each of the two card sessions of the hand runs in [`evidence.md`](evidence.md). The budget warning measures the whole session, so a budget set from these figures wants that much added. The peak and the growth in the body of a plan pull request are taken before its commit, and were short by 1,607 and 4,182 tokens in the two plan runs.'
+  assert_eq 1 "$(grep -c -x -F -e "$para" "$ROOT/docs/reference.md")" 'lines of docs/reference.md that are the paragraph on the measured fields'
+  assert_eq 'A budget limits growth' "$(grep -B 2 -x -F -e "$para" "$ROOT/docs/reference.md" | sed -n 1p | cut -c 1-22)" 'start of the paragraph before it'
+}
+
+test_plan_skill_says_what_the_growth_figure_leaves_out() {
+  local s
+  s=$(plan_step 9)
+  # The step says when: a figure taken while the body is written holds the
+  # commit and the push (review of F-04).
+  # shellcheck disable=SC2016
+  assert_contains "$s" 'revert it first. Run `card tokens` and keep what it prints for the body: the figures are taken here, before the commit. Run `git add <outline>` and `git commit`.'
+  # True on every path of the step: with no remote there is no push, and a
+  # resumed run that changed nothing makes no commit.
+  # shellcheck disable=SC2016
+  assert_contains "$s" '   - what `card tokens` printed earlier in this step. The peak and the growth leave out what the step did after them (the commit, the push and the pull request, where there were any): say so beside them;'
+  # Run once, and named once more for the body.
+  assert_eq 2 "$(grep -o 'card tokens' "$PLAN_SKILL" | grep -c .)" 'times the plan skill names card tokens'
 }
 
 INIT_SKILL="$ROOT/skills/init/SKILL.md"

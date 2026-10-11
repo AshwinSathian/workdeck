@@ -18,6 +18,8 @@ Card requested by the user (empty means the next ready card): `$ARGUMENTS`
 
 Work through these steps in order. Stop where a step says stop.
 
+Write and change every file (a card, an outline, a test, code, the session log, the body of a pull request) with the Write and Edit tools, not with `python3`, `cat >>`, `sed -i` or another shell command: a shell command that writes a file comes as one prompt with whatever is chained to it, and the tools show the change alone. The exceptions are what a `card` or `git` command that a step names writes itself, and what a tool of the project generates, a lockfile or a snapshot among them: run the command. A change of your own to such a file is made with the tools.
+
 1. **Check the state above.** If it is an error starting with `card:`, explain it and stop. With no `workdeck.conf`, the fix is `/workdeck:init`, which the user types.
 
 2. **Review fixes come first.** Run `gh pr list --author @me --state open --json number,headRefName,reviewDecision`. If a pull request from a `card/` branch has `reviewDecision` `CHANGES_REQUESTED`, do not start a new card: check out that branch, read the comments with `gh pr view <number> --comments`, and address them by following the implementation steps below. Tell the user the outcome for handoff will be `review-fixes`. If `gh` is missing or not signed in, say so and continue with step 3.
