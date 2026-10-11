@@ -15,6 +15,8 @@ done: true
 ## Touch
 - skills/init/SKILL.md
 - test/cases/60-skills.sh
+- docs/development/review-0.2.md (the record of the two reviews of this card, as every card of 0.2 has one)
+- docs/development/later.md (two lines from the second review, and three cases added to a third, for what this card leaves)
 
 ## Tests
 - test_init_asks_the_four_steps_one_after_another
