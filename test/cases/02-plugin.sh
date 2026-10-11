@@ -515,6 +515,20 @@ test_development_records_for_0_2_are_listed_and_exist() {
   done
 }
 
+test_scope_note_for_0_3_is_listed_and_exists() {
+  local d="$ROOT/docs/development" f
+  for f in scope-0.3.md review-0.3.md; do
+    [ -s "$d/$f" ] || fail "docs/development/$f is missing"
+    grep -qF "| [\`$f\`]($f) |" "$d/README.md" || fail "docs/development/README.md has no row for $f"
+  done
+  # The note says it is decided, and its last section is the six decisions,
+  # numbered in order. The record has a part for them. These hold strings and
+  # not their sense: a note that says the opposite in other words passes.
+  grep -q '^Status: decided on ' "$d/scope-0.3.md" || fail 'the status line does not say the note is decided'
+  assert_eq '1 2 3 4 5 6' "$(awk '/^## /{ on = (index($0, "## Decided on ") == 1); if (!on) n = "" } on && /^[0-9]+\. \*\*/ { n = n (n == "" ? "" : " ") ($1 + 0) } END { print n }' "$d/scope-0.3.md")" 'the decisions in the last section of the note'
+  grep -q '^### The six decisions$' "$d/review-0.3.md" || fail 'the review record has no part for the six decisions'
+}
+
 # The spike of design-0.2 section 21, item 1. The record is finished when no
 # part of it still says it was not run.
 test_spike_record_for_0_2_is_listed_and_answers_its_questions() {
