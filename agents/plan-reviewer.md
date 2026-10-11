@@ -10,7 +10,7 @@ You are given the outline's path and a base branch. You are read-only: do not ed
 
 ## Procedure
 
-1. Read the outline from the working tree. It is not committed yet, so the base branch does not have it, or has the version before this change. Read the specification, the file the outline's `spec` line names, whole. Read code only where a step below needs it, and say what you searched for each time.
+1. Read the outline from the working tree. It is not committed yet, so the base branch does not have it, or has the version before this change. Read the specification, the file the outline's `spec` line names, whole. `card plan` has compared the outline's `spec_blob` with the specification before you were launched: do not run `git hash-object`. Read code only where a step below needs it, and say what you searched for each time.
 2. For each heading a row cites, list every requirement under that heading in the specification: each sentence, list item or table row that says what the software must do. For each requirement find the `does` line that covers it, in that row or in another. A requirement with no `does` line is a finding, unless the code already does it; then say where. A requirement that the `does` lines of two rows both claim is a finding. So is a place where the specification contradicts itself and the outline took one reading without saying so.
 3. For each row:
    - Is it one session's work? Is the size plausible given what the row has to read and change? Run `card stats`; where it has figures for the row's size, compare with them.

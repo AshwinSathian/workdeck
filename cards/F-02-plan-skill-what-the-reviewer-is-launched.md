@@ -3,7 +3,7 @@ id: F-02
 title: Plan skill: what the reviewer is launched with, and every finding in the body
 size: XS
 depends:
-done: false
+done: true
 ---
 
 ## Read

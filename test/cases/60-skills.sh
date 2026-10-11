@@ -490,6 +490,32 @@ test_plan_skill_runs_the_push_as_its_own_command() {
   assert_contains "$(plan_step 9)" 'Otherwise run `git push -u origin <branch>`. Run the push as its own command, with nothing chained before or after it and nothing after the branch name.'
 }
 
+test_plan_skill_gives_the_reviewer_only_the_outline_and_the_base_branch() {
+  local s
+  s=$(plan_step 7)
+  # Both plan runs of P-21 gave the second launch a summary of the first.
+  assert_contains "$s" 'Those two are the whole prompt, on the first launch and on the second'
+  assert_contains "$s" 'no summary of earlier findings, of what was changed, or of what the user decided'
+  # The reviewer learns of a decision from the file it reviews.
+  assert_contains "$s" 'A decision of the user goes into the outline, as a `does` or a `not` line'
+  assert_contains "$s" 'so that the second run reads it there and does not raise the question again'
+}
+
+test_plan_skill_lists_each_finding_of_both_runs_once() {
+  local s
+  s=$(plan_step 9)
+  assert_contains "$s" 'Each finding of each run is one line, as the reviewer gave it, with its severity and then what was done'
+  assert_contains "$s" 'None is merged with another, split or left out'
+  assert_contains "$(plan_step 7)" 'Keep every finding of both runs as the reviewer gave it, with what was done about it'
+}
+
+test_plan_reviewer_does_not_hash_the_specification() {
+  local f="$ROOT/agents/plan-reviewer.md"
+  grep -q -F '`card plan` has compared the outline'"'"'s `spec_blob` with the specification' "$f" || fail 'the plan reviewer is not told that card plan compared spec_blob'
+  grep -q -F 'do not run `git hash-object`' "$f" || fail 'the plan reviewer is not told to leave git hash-object alone'
+  assert_eq 1 "$(grep -c -F 'hash-object' "$f")" 'lines that name git hash-object'
+}
+
 test_plan_skill_never_reuses_the_id_of_a_removed_row() {
   local s
   s=$(plan_step 5)
