@@ -920,3 +920,57 @@ Held when run or read by the second reviewer: step 6 runs `card plan` before eve
 Not run: any Claude Code session, so whether a session or the plan reviewer follows the new sentences, and whether the reviewer still runs `git hash-object`.
 
 The second reviewer then attacked these amendments in the working tree: 32 mutations of the amended sentences, 14 of them from its first round, and none passed. The suite, `card lint`, `card touched F-02`, `card tests F-02` and shellcheck on `test/cases/60-skills.sh` held on a copy. It had no must-fix finding. It asked for the note in P-23 to be an `Acceptance` item, for "objects to the line" where step 7 had "is on the line", which forbade fixing any fault of that line, and for three corrections to this pass; all were made. Nobody reviewed those.
+
+## Twenty-seventh pass, 2026-10-11: the reviews of F-03
+
+F-03 changed three lines of the init skill's section for a repository that is already set up: the four steps are asked one after another, a line in a fenced code block does not end the protocol section, the fourth step offers a yes or a no, and the line that sends such a repository to step 10 names every next step. Two agents that did not write it reviewed it: the handoff reviewer before the pull request was opened, and a second, told to break it and to attack the decision proposed for each open item, after. Neither had a must-fix. The maintainer told the session to take every decision the pull request left open. Both were general-purpose agents: the plugin was not loaded in the session, which followed the skill files by hand.
+
+The handoff review:
+
+| Found | Decided | Why |
+|---|---|---|
+| The exception for a fenced code block named a line that starts with `# `, and the sentence before it ends the section at `# ` or `## ` | It names both | A `## ` line in a block would end the section as the `# ` line did in the hand run. Beyond the card's words. |
+| "Wait for its answer" had no exception for a step with nothing to offer, which asks nothing | "it has asked nothing, so go on to the next step without waiting" | On a repository that is up to date the session would stop after each of the four lines. Beyond the card's words. |
+| The line "Then do step 10" names step 10's next steps as a closed list, and no test compares the two | Left at the handoff; see the second review | The card's acceptance asks for `/workdeck:plan` to be named in the line. |
+
+The second review:
+
+| Found | Decided | Why |
+|---|---|---|
+| "Say so in place of the list and the commit" now follows a list of three next steps, so "the list" can be read as that one, and `/workdeck:plan` is left out again | "in place of the list of files and of what step 10 says about committing them, and still give the next steps" | The fault the line was changed for. |
+| With the checksum updated after each, 22 of 50 mutations of the new sentences passed: the four tests held fragments. Among them "unless the section has a code block" after "Offer no partial change", and "Ask one step" moved into the first of the four steps | Three of the tests hold their sentences as one string with the words on either side, and the fourth compares the whole line "Then do step 10" | As the twenty-sixth pass did for F-02. A later card that changes the sum for its own reasons leaves these. |
+| Of 11 mutations of the four tests, 10 passed: a deleted assertion is not seen | Each test is now one assertion | A test with none left is a syntax error, which the suite reports. Replacing an assertion with `:` passes, as it would in any test. |
+| A fence that opens inside the section and is never closed: every later line is then inside a block, the section runs to the end of the file, and a yes deletes what is below it. Before the card the section ended at the next heading | A sentence in the fourth step: say so, change nothing and go on | The card widens what a yes deletes for every `# ` line in a block, by intent; here it did so without intent. |
+| "Do not put the four steps, or any two of them, into one question" covers neither the question about the branch nor the two questions of the third step | A sentence: the question about the branch and each question of the third step are asked alone in the same way | The hand run seems to have asked the copy of `REVIEW.md` and a rule together. |
+| The fourth step does not say what to do with an answer that is neither a yes nor a no | Left, as a line in `later.md` | See decision 10. |
+| "Each one asks first" stands three sentences before "it has asked nothing" | Left | The second names the step with nothing to offer. |
+| A `# ` line in an HTML comment ends the section, and a heading underlined with `---` does not | Left | As before the card. The twentieth pass left the second. |
+| The changelog reason given for decision 8 was wrong: init's section is under Changed, not Added | The reason is corrected below | |
+
+Decisions taken on what the pull request left open:
+
+1. The closed list in the line "Then do step 10". The three names stay, held by a test of the whole line. No test compares the line with step 10: step 10 also names `/workdeck:next-card` and writes the other commands in longer forms, so such a test would need a closed list of its own. A line in `later.md`.
+2. `## ` in the exception for a fenced code block, beyond the card's words. Kept.
+3. The clause that a step with nothing to offer is not waited on. Kept, and now inside the string a test holds.
+4. `docs/design-0.2.md`, section 10.3. Unchanged: it says nothing on where the section ends or on next steps, and nothing in it is made false. With a fence that is never closed init now shows no difference and replaces nothing, which 10.3 does not say; 10.3 is a summary.
+5. The measured fields, all `unknown`. Left: the skills were not installed, and the figures cannot be rebuilt.
+6. The review by a general-purpose agent, not `workdeck:reviewer`. Accepted, as said in the pull request.
+7. Nobody has seen a session follow the sentences. Does not hold the merge. P-23 has an `Acceptance` item for the two things a trial repository with `workdeck.conf` can show, the steps asked one after another and the closing message. The item also asks what the fourth step offered where the section differed. The fence needs a section that differs and holds one, which no trial repository has; the line of `later.md` on what P-21 did not run has that case.
+8. A line in the changelog. None. The section is under Changed, in the unreleased part, and the line there is still true. Init in `v0.1.3` stops on a `workdeck.conf`, so the whole section is unreleased, and steps 1 to 10 are as on the main branch.
+9. The card's `Touch` gains this file and `later.md`, as for F-02; F-01 has this file only. The card of P-23 changes too; `card touched` does not count the cards directory.
+10. An answer to the fourth step that is neither a yes nor a no. No sentence. The fault seen was that the session offered a partial change, and "Offer no partial change" covers it. A user who asks for one in their own words is not refused by a rule about what to offer. A line in `later.md`.
+11. Whether `/workdeck:next-card` is a next step of step 10. No: step 10 names it inside the sentence on `/workdeck:plan`. A user who wrote a card with `card new` is not told what to type next, on a new repository or a set-up one; that is as on the main branch.
+
+Held when run or read by the second reviewer: the suite, `card lint`, `card touched F-03`, `card tests F-03` and shellcheck on `test/cases/60-skills.sh`, on a copy; the four acceptance items and the three notes of the card; with the sum as committed, none of the 50 mutations passed; steps 5, 8 and 9 each ask one question, so "wait for its answer" does not collide with them; an indented or tilde fence is covered by the wording; no sentence of the README, the changelog, `docs/reference.md`, the design, the evidence page, `later.md` or the template says what the diff made false; the log and the pull request body agreed with the diff.
+
+Not run: any Claude Code session, so whether a session follows any of the new sentences.
+
+A third agent then attacked these amendments in the working tree. It reran the first round against the commit of the handoff and got the same counts. Of 94 mutations of the amended section, none passed with the sum as committed. With the sum updated after each, 14 passed, none of them a change to a sentence the four tests hold: all 80 mutations of those sentences were caught by the test of that sentence. The 14 add a sentence elsewhere in the section or change the sentence on the branch, which only the sum held. The suite, `card lint`, `card touched F-03`, `card tests F-03`, shellcheck on `test/cases/60-skills.sh` and `make lint` held on a copy. It had no must-fix finding and overturned no decision. It asked for five things, and all were made:
+
+- The sentence on a fence that is never closed said "change nothing" and not whether to go on; the same words stand beside "stop" earlier in the section. It now says to go on, so the user still gets the list of files and the next steps.
+- The first test now holds the paragraph to its end, the sentence on the branch with it, which the new sentence points to. That catches three of the 14, those that change the sentence on the branch.
+- The test of the code block had two assertions and a `local`, so deleting either passed. It is one assertion.
+- The `Acceptance` item in P-23 could not be answered for a repository that is up to date, where each step says one line and asks nothing. It names that case, the question about the branch and those of the third step, and what the fourth step offered.
+- Five corrections to this pass, to the line of `later.md` and to the note in P-23: the two answers need no fence, a current branch that is not the base branch is not a case from this card, and F-01's `Touch` has no `later.md`.
+
+Left from it: "below" for the sentence on the branch now reads "at the end of this paragraph"; a `## WorkDeck session protocol` heading inside a fenced example is taken as the section's start, and a section with an open fence and an odd number of fence lines below it pairs up and runs on, both as before the card or shown in the diff a yes follows. Eleven mutations that add a sentence outside the held strings, a fourth next step in step 10 among them, pass once the sum is updated; the sum is what holds them. Nobody reviewed these last fixes.

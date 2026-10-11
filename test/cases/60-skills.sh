@@ -573,7 +573,7 @@ test_init_continues_when_workdeck_conf_exists() {
   # The rest of the file is held whole, from its first line: of 50 mutations of
   # the skill, 41 passed the fragments in the tests below (review 0.2,
   # twentieth pass).
-  assert_eq '1201528225 7362' "$( (awk '/^2\. / { exit } 1' "$INIT_SKILL"; init_step 4; init_step 5; init_step 8; init_step 9; init_step 10; init_again_step) | cksum)" 'the file without steps 2, 3, 6 and 7'
+  assert_eq '3299384433 8323' "$( (awk '/^2\. / { exit } 1' "$INIT_SKILL"; init_step 4; init_step 5; init_step 8; init_step 9; init_step 10; init_again_step) | cksum)" 'the file without steps 2, 3, 6 and 7'
 }
 
 test_init_asks_before_each_step_and_overwrites_nothing() {
@@ -635,6 +635,31 @@ test_init_replaces_a_protocol_section_that_differs_from_the_template() {
   assert_contains "$s" 'with the directories replaced as step 4 says'
   # The section names the default directories (review 0.2, nineteenth pass).
   assert_contains "$(init_step 4)" 'Where `card conf cards_dir` prints something other than `cards`, write that directory in place of `cards` in `cards/` and `cards/plan/`'
+}
+
+# Hand run of 2026-10-11 (docs/evidence.md): the session asked the four steps
+# as one question, took a `# ` line inside a code block for the section's end,
+# offered "add the two bullets only" first, and left `/workdeck:plan` out of
+# its closing message.
+test_init_asks_the_four_steps_one_after_another() {
+  # Held as one string with the words on either side, here and in the three
+  # cases below: of 50 mutations of the sentences, 22 passed the fragments
+  # these cases first held (review 0.2, twenty-seventh pass). This one runs to
+  # the end of the paragraph: a step that asks nothing has no answer to wait
+  # for, and the sentence on the branch is the one "at the end" points to.
+  assert_contains "$(init_again_step)" 'without a yes. Ask one step and wait for its answer before you look at the next. Do not put the four steps, or any two of them, into one question. The question about the branch, at the end of this paragraph, and each question of the third step are asked alone in the same way. A step with nothing to offer says so in one line and changes nothing: it has asked nothing, so go on to the next step without waiting. Where step 5, 8 or 9 says to go on, go on to the next of these four, not to the step numbered after it. If a `card conf` command fails, show its message and stop: `workdeck.conf` is the user'\''s to repair. If the current branch is not the one `card conf base` prints, say so and ask whether to go on, before the first step: what these steps write belongs on the base branch. After a no, stop.'
+}
+
+test_init_does_not_end_the_protocol_section_inside_a_code_block() {
+  assert_contains "$(init_again_step 4)" 'or to the end of the file. A line that starts with `# ` or `## ` inside a fenced code block is part of that block and does not end the section. If a fence that opens inside the section is never closed, say so, change nothing and go on: where the section ends cannot be told, and the file is the user'\''s to repair. Blank lines'
+}
+
+test_init_offers_only_a_yes_or_a_no_for_the_protocol_section() {
+  assert_contains "$(init_again_step 4)" 'is in no commit. The question has two answers: a yes replaces the whole section, with any change the project made to it, and a no leaves it as it is. Say so. Offer no partial change, such as adding only the lines the section lacks. Replace it on a yes'
+}
+
+test_init_gives_every_next_step_of_step_10_on_a_set_up_repository() {
+  assert_eq 'Then do step 10, also when none of the four steps wrote anything. Give every next step it names: `/workdeck:quick`, `card new` and `/workdeck:plan <spec path>`. If none of the four steps wrote anything, say so in place of the list of files and of what step 10 says about committing them, and still give the next steps.' "$(init_again_step | sed -n '/^Then do step 10/p')" 'the line that sends a set-up repository to step 10'
 }
 
 test_init_no_longer_says_that_cards_are_not_written_from_a_specification() {
